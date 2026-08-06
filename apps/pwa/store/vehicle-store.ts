@@ -42,12 +42,6 @@ const MIN_PATH_DELTA = 0.00008; // ~9 m
 const SETTINGS_KEY = "cockpit-settings";
 
 /**
- * Representación del vehículo en el cuadro: cenital en SVG (por defecto, la
- * más legible de un vistazo) o modelo 3D con three.js.
- */
-export type CarView = "top" | "3d";
-
-/**
  * Ajustes que sobreviven a un reinicio.
  *
  * Importa en un coche: la pantalla puede reiniciarse (corte de contacto,
@@ -64,8 +58,6 @@ interface PersistedSettings {
   authToken: string;
   /** Id del vehículo al que pertenece esta telemetría en el backend. */
   vehicleId: string;
-  /** Representación del coche elegida en el cuadro (cenital o 3D). */
-  carView: CarView;
 }
 
 // Recursos no serializables fuera del estado reactivo.
@@ -115,8 +107,6 @@ export interface VehicleStore {
   authToken: string;
   /** Id del vehículo en el backend (debe existir y ser del usuario del token). */
   vehicleId: string;
-  /** Representación del coche en el cuadro; la cenital es la de serie. */
-  carView: CarView;
 
   /**
    * Restaura los ajustes guardados y conecta. Es el arranque del cockpit:
@@ -136,7 +126,6 @@ export interface VehicleStore {
   setWsUrl(url: string): void;
   setAuthToken(token: string): void;
   setVehicleId(id: string): void;
-  setCarView(view: CarView): void;
   clearPath(): void;
 }
 
@@ -156,7 +145,6 @@ export const useVehicleStore = create<VehicleStore>((set, get) => ({
   wsUrl: DEFAULT_WS_URL,
   authToken: "",
   vehicleId: VEHICLE_ID,
-  carView: "top",
 
   async boot() {
     try {
@@ -169,7 +157,6 @@ export const useVehicleStore = create<VehicleStore>((set, get) => ({
           wsUrl: saved.wsUrl,
           authToken: saved.authToken ?? "",
           vehicleId: saved.vehicleId || VEHICLE_ID,
-          carView: saved.carView === "3d" ? "3d" : "top",
           // El envío se rearma tras conectar, no antes (necesita provider).
           telemetryEnabled: false,
         });
@@ -381,11 +368,6 @@ export const useVehicleStore = create<VehicleStore>((set, get) => ({
     }
   },
 
-  setCarView(view) {
-    set({ carView: view });
-    persistSettings();
-  },
-
   clearPath() {
     set({ path: [], history: { coolant: [], boost: [], voltage: [], speed: [] } });
   },
@@ -405,7 +387,6 @@ function persistSettings(): void {
     wsUrl: s.wsUrl,
     authToken: s.authToken,
     vehicleId: s.vehicleId,
-    carView: s.carView,
   };
   void settingsStore.set(SETTINGS_KEY, settings).catch(() => undefined);
 }
