@@ -1,0 +1,41 @@
+{
+  "name": "@vehicleos/pwa",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Cockpit PWA de VehicleOS: instrumentación MBUX, diagnóstico, mantenimiento, viajes, mapa y asistente",
+  "scripts": {
+    "dev": "next dev -p 3000",
+    "build": "next build",
+    "start": "next start -p 3000",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests",
+    "icons": "node scripts/generate-icons.mjs"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.51.23",
+    "@vehicleos/ai": "workspace:*",
+    "@vehicleos/shared": "workspace:*",
+    "@vehicleos/storage": "workspace:*",
+    "@vehicleos/telemetry": "workspace:*",
+    "@vehicleos/ui": "workspace:*",
+    "@vehicleos/vehicle-sdk": "workspace:*",
+    "@vehicleos/vehicle-simulator": "workspace:*",
+    "next": "14.2.15",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "zustand": "^4.5.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.15",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "14.2.15",
+    "postcss": "^8.4.41",
+    "tailwindcss": "^3.4.10",
+    "typescript": "^5.5.4",
+    "vitest": "^2.0.5"
+  }
+}

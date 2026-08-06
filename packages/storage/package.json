@@ -1,0 +1,23 @@
+{
+  "name": "@vehicleos/storage",
+  "version": "0.1.0",
+  "description": "Wrapper de IndexedDB sin dependencias: cola offline de telemetría y almacén clave-valor, con fallback en memoria (SSR)",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json --watch",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@vehicleos/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.4",
+    "vitest": "^2.0.5"
+  }
+}

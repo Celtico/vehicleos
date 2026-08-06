@@ -1,0 +1,133 @@
+# Pipeline de CI/CD de VehicleOS (GitLab CI)
+#
+# Etapas:
+#   setup   → instala dependencias una vez y las cachea para el resto
+#   quality → lint, formato y typecheck del monorepo TypeScript
+#   build   → compila paquetes, PWA y backend (turbo respeta el grafo)
+#   test    → tests de paquetes (vitest) y backend (jest)
+#   android → compila el Vehicle Bridge (solo si existe el wrapper de Gradle)
+
+stages:
+  - setup
+  - quality
+  - build
+  - test
+  - android
+
+variables:
+  NODE_VERSION: "20"
+  PNPM_VERSION: "9.5.0"
+  # Store de pnpm dentro del workspace para poder cachearlo entre jobs.
+  PNPM_HOME: "$CI_PROJECT_DIR/.pnpm-store"
+  TURBO_TELEMETRY_DISABLED: "1"
+  NEXT_TELEMETRY_DISABLED: "1"
+
+# Plantilla común de los jobs de Node.
+.node:
+  image: node:20-bookworm-slim
+  before_script:
+    - corepack enable
+    - corepack prepare pnpm@$PNPM_VERSION --activate
+    - pnpm config set store-dir "$PNPM_HOME"
+  cache:
+    key:
+      files:
+        - pnpm-lock.yaml
+    paths:
+      - .pnpm-store/
+    policy: pull
+
+instalar:
+  extends: .node
+  stage: setup
+  script:
+    - pnpm install --frozen-lockfile
+    # El cliente de Prisma se genera aquí para que build y test lo encuentren.
+    - pnpm --filter @vehicleos/backend run prisma:generate
+  cache:
+    key:
+      files:
+        - pnpm-lock.yaml
+    paths:
+      - .pnpm-store/
+    policy: pull-push
+  artifacts:
+    expire_in: 1 hour
+    paths:
+      - node_modules/
+      - apps/*/node_modules/
+      - packages/*/node_modules/
+
+lint:
+  extends: .node
+  stage: quality
+  needs: [instalar]
+  script:
+    - pnpm lint
+
+formato:
+  extends: .node
+  stage: quality
+  needs: [instalar]
+  script:
+    - pnpm prettier --check "**/*.{ts,tsx,md,json}"
+
+typecheck:
+  extends: .node
+  stage: quality
+  needs: [instalar]
+  script:
+    - pnpm typecheck
+
+build:
+  extends: .node
+  stage: build
+  needs: [instalar]
+  script:
+    - pnpm build
+  artifacts:
+    expire_in: 1 day
+    paths:
+      - packages/*/dist/
+      - apps/backend/dist/
+      - apps/pwa/.next/
+
+test:
+  extends: .node
+  stage: test
+  needs: [instalar, build]
+  script:
+    - pnpm test
+  coverage: '/All files[^|]*\|[^|]*\s+([\d.]+)/'
+  artifacts:
+    when: always
+    expire_in: 1 week
+    reports:
+      junit:
+        - apps/backend/junit.xml
+    paths:
+      - coverage/
+
+# El bridge Android vive fuera de pnpm/turbo: se compila con Gradle.
+android-bridge:
+  stage: android
+  image: eclipse-temurin:17-jdk
+  needs: []
+  rules:
+    - exists:
+        - apps/android-bridge/gradlew
+  before_script:
+    - apt-get update -qq && apt-get install -y -qq unzip wget
+    - wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O /tmp/tools.zip
+    - mkdir -p /sdk/cmdline-tools && unzip -q /tmp/tools.zip -d /sdk/cmdline-tools
+    - mv /sdk/cmdline-tools/cmdline-tools /sdk/cmdline-tools/latest
+    - export ANDROID_HOME=/sdk
+    - yes | /sdk/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null
+  script:
+    - export ANDROID_HOME=/sdk
+    - cd apps/android-bridge
+    - ./gradlew assembleDebug --no-daemon
+  artifacts:
+    expire_in: 1 week
+    paths:
+      - apps/android-bridge/app/build/outputs/apk/debug/*.apk

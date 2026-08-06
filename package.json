@@ -1,0 +1,21 @@
+{
+  "name": "vehicleos",
+  "private": true,
+  "packageManager": "pnpm@9.5.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "typecheck": "turbo run typecheck",
+    "format": "prettier --write \"**/*.{ts,tsx,md,json}\""
+  },
+  "devDependencies": {
+    "prettier": "^3.3.3",
+    "turbo": "^2.1.0",
+    "typescript": "^5.5.4"
+  }
+}

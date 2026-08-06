@@ -1,0 +1,23 @@
+# PostgreSQL 16 para desarrollo local del backend de VehicleOS.
+# Arranque: docker compose up -d
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: vehicleos-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: vehicleos
+      POSTGRES_PASSWORD: vehicleos
+      POSTGRES_DB: vehicleos
+    ports:
+      - "5432:5432"
+    volumes:
+      - vehicleos_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vehicleos -d vehicleos"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  vehicleos_pgdata:

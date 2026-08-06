@@ -1,0 +1,12 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "typecheck": {
+      // Next.js genera los tipos de las rutas (.next/types) durante el build,
+      // y el tsconfig los incluye: sin esta dependencia typecheck puede correr
+      // antes y fallar con TS6053.
+      "dependsOn": ["^build", "build"]
+    }
+  }
+}

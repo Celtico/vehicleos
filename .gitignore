@@ -1,0 +1,32 @@
+# Dependencias
+node_modules/
+.pnpm-store/
+
+# Builds
+dist/
+.next/
+.turbo/
+out/
+build/
+*.tsbuildinfo
+
+# Android
+apps/android-bridge/.gradle/
+apps/android-bridge/local.properties
+apps/android-bridge/**/build/
+*.apk
+*.aab
+
+# Entorno
+.env
+.env.local
+.env*.local
+
+# Prisma
+apps/backend/prisma/dev.db
+
+# IDE / SO
+.idea/
+.DS_Store
+*.log
+coverage/

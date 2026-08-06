@@ -1,0 +1,23 @@
+{
+  "name": "@vehicleos/vehicle-protocol",
+  "version": "0.1.0",
+  "description": "Protocolo OBD-II / ELM327: definición de PIDs, parseo de respuestas y decodificación de DTC",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json --watch",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@vehicleos/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.4",
+    "vitest": "^2.0.5"
+  }
+}

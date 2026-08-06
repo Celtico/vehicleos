@@ -1,0 +1,36 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Cockpit negro de pantalla completa con tipografía fina. */
+html,
+body {
+  height: 100%;
+  background: #05080a;
+  color: #e8f0f2;
+  font-family: "Helvetica Neue", -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-weight: 300;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
+}
+
+/* Barra de scroll discreta acorde al tema. */
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: rgba(127, 146, 153, 0.35);
+  border-radius: 4px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Inputs del cockpit. */
+.cockpit-input {
+  @apply w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-silver outline-none transition-colors;
+}
+.cockpit-input:focus {
+  border-color: rgba(0, 210, 190, 0.5);
+}

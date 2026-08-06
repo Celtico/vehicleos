@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  VehicleOS Bridge — servicio sin interfaz de usuario.
+
+  REGLA DE SEGURIDAD: este proceso es el ÚNICO con acceso al hardware
+  (Bluetooth, BLE, USB, WiFi del adaptador). La PWA solo ve la API
+  JSON-RPC local (ws://127.0.0.1:8722 o window.VehicleBridge).
+
+  No hay ninguna Activity: la app se arranca en el arranque del sistema
+  (BOOT_COMPLETED) o con:
+    adb shell am broadcast -a os.vehicle.bridge.START
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Bluetooth clásico y BLE en Android 12+ -->
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission
+        android:name="android.permission.BLUETOOTH_SCAN"
+        android:usesPermissionFlags="neverForLocation"
+        tools:targetApi="s" />
+    <!-- Bluetooth en Android 8–11 (obsoletos a partir de API 31) -->
+    <uses-permission
+        android:name="android.permission.BLUETOOTH"
+        android:maxSdkVersion="30" />
+    <uses-permission
+        android:name="android.permission.BLUETOOTH_ADMIN"
+        android:maxSdkVersion="30" />
+
+    <!-- GPS para el campo location de la telemetría -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
+    <!-- Servicio en primer plano (dispositivo conectado + ubicación) -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+
+    <!-- Notificación persistente obligatoria del foreground service (API 33+) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- Sockets locales (WebSocket 127.0.0.1 y WiFi del adaptador) -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- Autoarranque tras el boot -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <!-- Hardware opcional: la app funciona aunque falte alguno -->
+    <uses-feature android:name="android.hardware.usb.host" android:required="false" />
+    <uses-feature android:name="android.hardware.bluetooth" android:required="false" />
+    <uses-feature android:name="android.hardware.bluetooth_le" android:required="false" />
+    <uses-feature android:name="android.hardware.location.gps" android:required="false" />
+
+    <application
+        android:label="@string/app_name"
+        android:allowBackup="false">
+        <!-- SIN activity launcher: app 100 % headless -->
+
+        <!--
+          Servicio principal. foregroundServiceType es obligatorio en
+          Android 14 (targetSdk 34): declaramos connectedDevice (adaptador
+          OBD) y location (GPS de la telemetría).
+        -->
+        <service
+            android:name=".VehicleBridgeService"
+            android:exported="false"
+            android:foregroundServiceType="connectedDevice|location" />
+
+        <!--
+          Receiver exportado: arranca el servicio al encender el coche
+          (BOOT_COMPLETED) o bajo demanda con la acción explícita
+          os.vehicle.bridge.START (p. ej. desde adb).
+        -->
+        <receiver
+            android:name=".BootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="os.vehicle.bridge.START" />
+            </intent-filter>
+        </receiver>
+    </application>
+</manifest>

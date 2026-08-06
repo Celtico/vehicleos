@@ -1,0 +1,112 @@
+// Esquema de base de datos de VehicleOS (PostgreSQL).
+// Genera el cliente con `pnpm --filter @vehicleos/backend run prisma:generate`.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// Usuario de la plataforma. Cada usuario posee sus vehículos.
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  name         String
+  createdAt    DateTime  @default(now())
+  vehicles     Vehicle[]
+}
+
+/// Vehículo registrado. Todos los datos (muestras, viajes, DTCs, alertas)
+/// cuelgan de él y solo son visibles para su propietario.
+model Vehicle {
+  id        String   @id @default(cuid())
+  ownerId   String
+  owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  name      String
+  make      String
+  model     String
+  year      Int
+  vin       String?
+  plate     String?
+  createdAt DateTime @default(now())
+
+  samples   TelemetrySample[]
+  trips     Trip[]
+  dtcEvents DtcEvent[]
+  alerts    Alert[]
+
+  @@index([ownerId])
+}
+
+/// Muestra de telemetría persistida (contrato TelemetrySample de @vehicleos/shared).
+/// La posición GPS se aplana en lat/lon para poder indexar y agregar en SQL.
+model TelemetrySample {
+  id             String   @id @default(cuid())
+  vehicleId      String
+  vehicle        Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  timestamp      DateTime
+  speed          Float
+  rpm            Float
+  coolantTemp    Float
+  batteryVoltage Float
+  fuelLevel      Float
+  lat            Float?
+  lon            Float?
+
+  @@index([vehicleId, timestamp])
+}
+
+/// Viaje: se abre con el mensaje WS "trip-start" y se cierra con "trip-end",
+/// momento en el que se calculan los agregados a partir de las muestras.
+model Trip {
+  id             String    @id @default(cuid())
+  vehicleId      String
+  vehicle        Vehicle   @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  startedAt      DateTime
+  endedAt        DateTime?
+  distanceKm     Float     @default(0)
+  /// Consumo medio en L/100km (estimado a partir del nivel de combustible).
+  avgConsumption Float     @default(0)
+  maxSpeed       Float     @default(0)
+  avgSpeed       Float     @default(0)
+  /// Ruta muestreada: array de GeoPoint {lat, lon} en JSON.
+  path           Json      @default("[]")
+
+  @@index([vehicleId, startedAt])
+}
+
+/// Evento de código de avería (DTC OBD-II). `clearedAt` nulo = todavía activo.
+model DtcEvent {
+  id          String    @id @default(cuid())
+  vehicleId   String
+  vehicle     Vehicle   @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  /// Código normalizado, p. ej. "P0401".
+  code        String
+  /// stored | pending | permanent (contrato DiagnosticTroubleCode de shared).
+  status      String
+  description String?
+  detectedAt  DateTime  @default(now())
+  clearedAt   DateTime?
+
+  @@index([vehicleId, code])
+}
+
+/// Alerta generada por las reglas automáticas del backend.
+model Alert {
+  id           String   @id @default(cuid())
+  vehicleId    String
+  vehicle      Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+  /// info | warning | critical
+  severity     String
+  /// dtc | overheat | low-battery | low-fuel | maintenance | custom
+  kind         String
+  message      String
+  acknowledged Boolean  @default(false)
+
+  @@index([vehicleId, acknowledged])
+}

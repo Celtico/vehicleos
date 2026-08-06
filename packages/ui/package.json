@@ -1,0 +1,28 @@
+{
+  "name": "@vehicleos/ui",
+  "version": "0.1.0",
+  "description": "Componentes React de instrumentación estilo MBUX: gauges SVG animados a 60 FPS con rAF",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json --watch",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run --passWithNoTests"
+  },
+  "peerDependencies": {
+    "react": "^18.2.0"
+  },
+  "dependencies": {
+    "@vehicleos/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.3",
+    "react": "^18.3.1",
+    "typescript": "^5.5.4",
+    "vitest": "^2.0.5"
+  }
+}

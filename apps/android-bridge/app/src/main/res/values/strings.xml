@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">VehicleOS Bridge</string>
+    <!-- Texto de la notificación persistente (único elemento visible de la app) -->
+    <string name="notification_title">VehicleOS Bridge activo</string>
+    <string name="notification_text">Puente OBD-II escuchando en 127.0.0.1:8722</string>
+    <string name="notification_channel">Servicio VehicleOS Bridge</string>
+</resources>

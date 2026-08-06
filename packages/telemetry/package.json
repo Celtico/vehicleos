@@ -1,0 +1,26 @@
+{
+  "name": "@vehicleos/telemetry",
+  "version": "0.1.0",
+  "description": "Cliente de telemetría: muestreo a 1 Hz, lotes por WebSocket y cola offline con reintento exponencial",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json --watch",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@vehicleos/shared": "workspace:*",
+    "@vehicleos/storage": "workspace:*",
+    "@vehicleos/vehicle-sdk": "workspace:*",
+    "socket.io-client": "^4.7.5"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.4",
+    "vitest": "^2.0.5"
+  }
+}
