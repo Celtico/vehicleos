@@ -1,0 +1,14 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "outputs": ["out/**", ".next/**", "!.next/cache/**"]
+    },
+    "typecheck": {
+      // Next genera los tipos de rutas durante el build; sin esta dependencia
+      // typecheck puede adelantarse y fallar con TS6053.
+      "dependsOn": ["build"]
+    }
+  }
+}

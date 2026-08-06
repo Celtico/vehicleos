@@ -29,17 +29,65 @@ import {
 } from "@vehicleos/ui";
 import { DEFAULT_PROFILE } from "@vehicleos/shared";
 import { partsFromDtc, PART_LABELS } from "@vehicleos/ai";
-import { useVehicleStore } from "../store/vehicle-store";
+import { useVehicleStore, type CarView } from "../store/vehicle-store";
+import { VehicleModel3DLazy } from "../components/VehicleModel3DLazy";
 
 /** Temperatura a la que el vano motor empieza a teñirse. */
 const TEMP_FRIA = 70;
 const TEMP_CALIENTE = 115;
+
+/** Opciones del conmutador de representación del coche. */
+const VISTAS: readonly { id: CarView; etiqueta: string }[] = [
+  { id: "top", etiqueta: "Cenital" },
+  { id: "3d", etiqueta: "3D" },
+];
+
+/**
+ * Conmutador cenital / 3D. Discreto a propósito: es una preferencia, no un
+ * mando de conducción, así que no debe competir con los indicadores.
+ */
+function ConmutadorVista({
+  vista,
+  onChange,
+}: {
+  vista: CarView;
+  onChange: (v: CarView) => void;
+}) {
+  return (
+    <div
+      role="group"
+      aria-label="Representación del vehículo"
+      className="flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.03] p-0.5"
+    >
+      {VISTAS.map((v) => {
+        const activa = vista === v.id;
+        return (
+          <button
+            key={v.id}
+            type="button"
+            onClick={() => onChange(v.id)}
+            aria-pressed={activa}
+            className={`rounded-full px-3 py-1 text-[10px] uppercase tracking-[0.25em] transition-colors ${
+              activa
+                ? "bg-accent/15 text-accent"
+                : "text-muted hover:text-silver focus-visible:text-silver"
+            }`}
+          >
+            {v.etiqueta}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
 export default function DashboardPage() {
   const router = useRouter();
   const t = useVehicleStore((s) => s.telemetry);
   const dtc = useVehicleStore((s) => s.dtc);
   const history = useVehicleStore((s) => s.history);
+  const carView = useVehicleStore((s) => s.carView);
+  const setCarView = useVehicleStore((s) => s.setCarView);
   const [piezaTocada, setPiezaTocada] = useState<VehiclePartId | null>(null);
 
   // Traducción de averías a piezas resaltadas del modelo.
@@ -65,13 +113,26 @@ export default function DashboardPage() {
       <div className="flex flex-1 flex-wrap items-center justify-center gap-4">
         <SpeedGauge speed={t?.speed ?? 0} size={272} max={DEFAULT_PROFILE.maxSpeed} />
 
-        <div className="flex flex-col items-center gap-2">
-          <VehicleModel
-            size={300}
-            parts={parts}
-            engineHeat={engineHeat}
-            onPartClick={(p) => setPiezaTocada(p === piezaTocada ? null : p)}
-          />
+        <div className="flex w-[320px] flex-col items-center gap-2">
+          {carView === "3d" ? (
+            <div className="w-full">
+              <VehicleModel3DLazy
+                height={424}
+                parts={parts}
+                engineHeat={engineHeat}
+                onPartClick={(p) => setPiezaTocada(p === piezaTocada ? null : p)}
+              />
+            </div>
+          ) : (
+            <VehicleModel
+              size={300}
+              parts={parts}
+              engineHeat={engineHeat}
+              onPartClick={(p) => setPiezaTocada(p === piezaTocada ? null : p)}
+            />
+          )}
+
+          <ConmutadorVista vista={carView} onChange={setCarView} />
 
           {/* Detalle de la pieza tocada, o testigos si no hay ninguna. */}
           {piezaTocada ? (

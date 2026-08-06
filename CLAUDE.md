@@ -14,6 +14,7 @@ pnpm build                   # turbo build (respects dependency graph)
 pnpm test                    # all tests (vitest in packages, jest in backend)
 pnpm typecheck               # tsc --noEmit everywhere
 pnpm --filter @vehicleos/pwa dev       # cockpit at localhost:3000 (simulator by default)
+pnpm --filter @vehicleos/landing dev   # marketing site at localhost:3002 (static export to out/)
 pnpm --filter @vehicleos/backend dev   # API at localhost:3001 (needs Postgres: docker compose up -d in apps/backend, then pnpm prisma:migrate)
 ```
 
@@ -41,5 +42,6 @@ Run a single package's tests: `pnpm --filter @vehicleos/vehicle-simulator test`.
 - Strict TypeScript everywhere; base config in `tsconfig.base.json`.
 - Comments/JSDoc/READMEs in Spanish.
 - Tests colocated as `*.test.ts` (vitest) in packages; backend uses jest.
+- `apps/landing` is the marketing site: a separate static-export Next.js app, not part of the cockpit. Its screenshots in `public/img` are real product captures — regenerate them when the UI changes rather than letting them go stale.
 - CI runs on **GitLab CI** (`.gitlab-ci.yml`): setup → quality (lint/format/typecheck) → build → test → android. There is no GitHub Actions workflow.
 - `.claude/skills/` contains installed Agent Skills; `.claude/template/SKILL.md` is the template for new ones. Do not edit `.idea/`.

@@ -30,3 +30,6 @@ apps/backend/prisma/dev.db
 .DS_Store
 *.log
 coverage/
+
+# Exportación estática de la landing
+apps/landing/out/

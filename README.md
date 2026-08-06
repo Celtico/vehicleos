@@ -7,6 +7,7 @@ Sistema operativo para coches basado en una PWA. Funciona en pantallas Android d
 ```
 apps/
   pwa             → Cockpit PWA (Next.js App Router, Tailwind, React Query, Zustand)
+  landing         → Página de presentación (Next.js, exportación estática)
   backend         → API NestJS (REST + WebSocket, PostgreSQL + Prisma, JWT)
   android-bridge  → Servicio Android en Kotlin (único proceso con acceso al hardware)
 
@@ -56,6 +57,9 @@ pnpm --filter @vehicleos/pwa dev
 # Backend — http://localhost:3001 (levanta antes la base de datos)
 cd apps/backend && docker compose up -d && pnpm prisma:migrate
 pnpm --filter @vehicleos/backend dev
+
+# Landing — http://localhost:3002
+pnpm --filter @vehicleos/landing dev
 
 # Bridge Android
 cd apps/android-bridge && ./gradlew assembleDebug
