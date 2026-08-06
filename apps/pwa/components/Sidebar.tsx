@@ -90,6 +90,18 @@ const ITEMS: NavItem[] = [
     ),
   },
   {
+    href: "/panel",
+    label: "Flota",
+    icon: (
+      <svg viewBox="0 0 24 24" className="h-6 w-6" {...stroke}>
+        <rect x="3" y="4" width="7.5" height="7" rx="1.5" />
+        <rect x="13.5" y="4" width="7.5" height="7" rx="1.5" />
+        <rect x="3" y="13" width="7.5" height="7" rx="1.5" />
+        <rect x="13.5" y="13" width="7.5" height="7" rx="1.5" />
+      </svg>
+    ),
+  },
+  {
     href: "/settings",
     label: "Ajustes",
     icon: (
