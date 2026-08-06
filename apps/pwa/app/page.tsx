@@ -1,102 +1,168 @@
 "use client";
 
 /**
- * Dashboard principal: SpeedGauge y RpmGauge centrales, LinearGauges de
- * temperatura/tensión/turbo/combustible, testigos y batería, en tiempo real.
- * Los gauges leen el último valor del store y animan internamente con rAF.
+ * Cuadro principal.
+ *
+ * El coche ocupa el centro y resalta la pieza averiada: los códigos de
+ * avería ya identifican la esquina afectada (C0035 es el sensor de rueda
+ * delantera izquierda), así que el modelo traduce el diagnóstico a algo
+ * que se entiende de un vistazo, sin leer códigos.
+ *
+ * A los lados quedan los dos indicadores que se miran conduciendo
+ * (velocidad y régimen) y, debajo, las gráficas de las magnitudes cuya
+ * *tendencia* importa más que su valor instantáneo: si el refrigerante
+ * sube despacio o el turbo ya no alcanza presión, se ve aquí.
  */
+import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   BatteryIndicator,
   Card,
-  LinearGauge,
   MBUX,
   RpmGauge,
   SpeedGauge,
   StatusLight,
   TelemetryTile,
+  TimeSeriesChart,
+  VehicleModel,
+  type VehiclePartId,
 } from "@vehicleos/ui";
+import { DEFAULT_PROFILE } from "@vehicleos/shared";
+import { partsFromDtc, PART_LABELS } from "@vehicleos/ai";
 import { useVehicleStore } from "../store/vehicle-store";
 
-export default function DashboardPage() {
-  const telemetry = useVehicleStore((s) => s.telemetry);
+/** Temperatura a la que el vano motor empieza a teñirse. */
+const TEMP_FRIA = 70;
+const TEMP_CALIENTE = 115;
 
-  const t = telemetry;
+export default function DashboardPage() {
+  const router = useRouter();
+  const t = useVehicleStore((s) => s.telemetry);
+  const dtc = useVehicleStore((s) => s.dtc);
+  const history = useVehicleStore((s) => s.history);
+  const [piezaTocada, setPiezaTocada] = useState<VehiclePartId | null>(null);
+
+  // Traducción de averías a piezas resaltadas del modelo.
+  const parts = useMemo(() => partsFromDtc(dtc), [dtc]);
+
+  // El calor del vano motor se normaliza entre frío y sobrecalentado.
+  const engineHeat = t
+    ? Math.max(
+        0,
+        Math.min(100, ((t.coolantTemp - TEMP_FRIA) / (TEMP_CALIENTE - TEMP_FRIA)) * 100),
+      )
+    : 0;
+
+  // Averías asociadas a la pieza que el conductor acaba de tocar.
+  const averiasDePieza = useMemo(() => {
+    if (!piezaTocada) return [];
+    return dtc.filter((d) => (parts[piezaTocada] ? partsFromDtc([d])[piezaTocada] : false));
+  }, [piezaTocada, dtc, parts]);
 
   return (
-    // El cuadro ocupa todo el alto disponible y reparte los tres bloques:
-    // en una pantalla de coche no debe quedar espacio muerto bajo las tarjetas.
-    <div className="flex h-full min-h-[580px] flex-col justify-between gap-5 p-6">
-      {/* Gauges principales */}
-      <div className="flex flex-1 flex-wrap items-center justify-center gap-6">
-        <SpeedGauge speed={t?.speed ?? 0} size={320} />
-        <div className="flex flex-col items-center gap-3">
-          <div className="flex flex-row gap-6">
-            <StatusLight kind="engine" status={t?.systems.engine ?? "unknown"} />
-            <StatusLight kind="abs" status={t?.systems.abs ?? "unknown"} />
-            <StatusLight kind="esp" status={t?.systems.esp ?? "unknown"} />
-            <StatusLight kind="airbag" status={t?.systems.airbag ?? "unknown"} />
-          </div>
-          <BatteryIndicator
-            voltage={t?.batteryVoltage ?? 12.4}
-            engineRunning={t?.engineRunning ?? false}
+    <div className="flex h-full min-h-[640px] flex-col gap-4 p-5">
+      {/* Fila principal: velocidad · coche · régimen */}
+      <div className="flex flex-1 flex-wrap items-center justify-center gap-4">
+        <SpeedGauge speed={t?.speed ?? 0} size={272} max={DEFAULT_PROFILE.maxSpeed} />
+
+        <div className="flex flex-col items-center gap-2">
+          <VehicleModel
+            size={300}
+            parts={parts}
+            engineHeat={engineHeat}
+            onPartClick={(p) => setPiezaTocada(p === piezaTocada ? null : p)}
           />
-          <span className="text-[10px] uppercase tracking-[0.25em] text-muted">
-            {t?.engineRunning ? "Motor en marcha" : "Motor parado"}
-          </span>
+
+          {/* Detalle de la pieza tocada, o testigos si no hay ninguna. */}
+          {piezaTocada ? (
+            <button
+              onClick={() => router.push("/diagnostics")}
+              className="max-w-[320px] rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2 text-left transition-colors hover:border-accent/40"
+            >
+              <p className="text-xs uppercase tracking-[0.2em] text-accent">
+                {PART_LABELS[piezaTocada]}
+              </p>
+              <p className="mt-0.5 text-xs text-muted">
+                {averiasDePieza.length > 0
+                  ? `${averiasDePieza.map((d) => d.code).join(", ")} · toca para ver el diagnóstico`
+                  : "Sin averías en esta pieza"}
+              </p>
+            </button>
+          ) : (
+            <div className="flex flex-row gap-5">
+              <StatusLight kind="engine" status={t?.systems.engine ?? "unknown"} />
+              <StatusLight kind="abs" status={t?.systems.abs ?? "unknown"} />
+              <StatusLight kind="esp" status={t?.systems.esp ?? "unknown"} />
+              <StatusLight kind="airbag" status={t?.systems.airbag ?? "unknown"} />
+            </div>
+          )}
+
+          <div className="flex items-center gap-3">
+            <BatteryIndicator
+              voltage={t?.batteryVoltage ?? 12.4}
+              engineRunning={t?.engineRunning ?? false}
+            />
+            <span className="text-[10px] uppercase tracking-[0.25em] text-muted">
+              {t?.engineRunning ? "Motor en marcha" : "Motor parado"}
+            </span>
+          </div>
         </div>
-        <RpmGauge rpm={t?.rpm ?? 0} size={320} />
+
+        <RpmGauge
+          rpm={t?.rpm ?? 0}
+          size={272}
+          max={DEFAULT_PROFILE.maxRpm}
+          redline={DEFAULT_PROFILE.redlineRpm}
+        />
       </div>
 
-      {/* Barras lineales */}
-      <Card>
-        <div className="grid grid-cols-2 gap-x-10 gap-y-5 lg:grid-cols-4">
-          <LinearGauge
-            value={t?.coolantTemp ?? 0}
-            min={0}
-            max={130}
+      {/* Gráficas: lo que importa es la tendencia, no el número suelto. */}
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+        <Card>
+          <TimeSeriesChart
+            points={history.coolant}
             label="Refrigerante"
             unit="°C"
+            min={0}
+            max={130}
+            height={110}
             zones={[
               { from: 105, to: 115, color: MBUX.warning },
               { from: 115, to: 130, color: MBUX.danger },
             ]}
+            format={(v) => v.toFixed(0)}
           />
-          <LinearGauge
-            value={t?.batteryVoltage ?? 0}
-            min={8}
-            max={16}
-            label="Tensión"
-            unit="V"
-            format={(v) => v.toFixed(1)}
-            zones={[
-              { from: 8, to: 11.8, color: MBUX.danger },
-              { from: 11.8, to: 12.8, color: MBUX.warning },
-            ]}
-          />
-          <LinearGauge
-            value={t?.turboPressure ?? 0}
-            min={0}
-            max={2}
+        </Card>
+        <Card>
+          <TimeSeriesChart
+            points={history.boost}
             label="Turbo"
             unit="bar"
+            min={0}
+            max={DEFAULT_PROFILE.maxBoostBar ?? 1.4}
+            height={110}
             format={(v) => v.toFixed(2)}
           />
-          <LinearGauge
-            value={t?.fuelLevel ?? 0}
-            min={0}
-            max={100}
-            label="Combustible"
-            unit="%"
-            zones={[{ from: 0, to: 10, color: MBUX.danger }]}
+        </Card>
+        <Card>
+          <TimeSeriesChart
+            points={history.voltage}
+            label="Tensión"
+            unit="V"
+            min={10}
+            max={15.5}
+            height={110}
+            zones={[{ from: 10, to: 11.8, color: MBUX.danger }]}
+            format={(v) => v.toFixed(1)}
           />
-        </div>
-      </Card>
+        </Card>
+      </div>
 
-      {/* Fila de métricas */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      {/* Fila de métricas instantáneas */}
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <TelemetryTile label="Consumo" value={t?.fuelRate ?? 0} unit="L/h" decimals={1} />
+        <TelemetryTile label="Combustible" value={t?.fuelLevel ?? 0} unit="%" />
         <TelemetryTile label="Carga motor" value={t?.engineLoad ?? 0} unit="%" />
-        <TelemetryTile label="Acelerador" value={t?.throttle ?? 0} unit="%" />
         <TelemetryTile label="Odómetro" value={t?.odometer ?? 0} unit="km" />
       </div>
     </div>

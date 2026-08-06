@@ -15,3 +15,10 @@ export {
   type AssistantClientOptions,
   type AssistantRequest,
 } from "./assistant";
+export {
+  partsForCode,
+  partsFromDtc,
+  PART_LABELS,
+  type PartSeverity,
+  type VehiclePartId,
+} from "./parts";

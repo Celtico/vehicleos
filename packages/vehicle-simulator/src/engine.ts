@@ -10,11 +10,13 @@
  * El tick interno corre a `tickHz` (20 Hz por defecto); los suscriptores
  * reciben cada instantánea y la UI interpola a 60 FPS.
  */
-import type {
-  DiagnosticTroubleCode,
-  GeoPoint,
-  VehicleSystems,
-  VehicleTelemetry,
+import {
+  DEFAULT_PROFILE,
+  type DiagnosticTroubleCode,
+  type GeoPoint,
+  type VehicleProfile,
+  type VehicleSystems,
+  type VehicleTelemetry,
 } from "@vehicleos/shared";
 import { SCENARIOS, type ScenarioDefinition, type ScenarioId } from "./scenarios";
 
@@ -29,17 +31,23 @@ export interface SimulatorOptions {
   initialOdometer?: number;
   /** Punto GPS inicial (por defecto, Madrid). */
   origin?: GeoPoint;
+  /**
+   * Perfil del vehículo simulado. Determina ralentí, corte de inyección,
+   * relaciones de cambio y capacidad del depósito. Por defecto, el CLK
+   * 270 CDI: un diésel no se comporta como un gasolina.
+   */
+  profile?: VehicleProfile;
 }
 
 type Listener = (t: VehicleTelemetry) => void;
 
-/** Relaciones de una caja de 6 marchas (rpm por km/h en cada marcha). */
-const GEAR_RPM_PER_KMH = [95, 55, 38, 28, 22, 18];
-const IDLE_RPM = 800;
-const COLD_IDLE_RPM = 1150;
+/** Sobrerrégimen del ralentí en frío, en rpm sobre el nominal. */
+const COLD_IDLE_EXTRA = 350;
 
 export class VehicleSimulator {
   private readonly tickMs: number;
+  private readonly profile: VehicleProfile;
+  private readonly gearRatios: number[];
   private timer: ReturnType<typeof setInterval> | null = null;
   private listeners = new Set<Listener>();
 
@@ -71,6 +79,8 @@ export class VehicleSimulator {
   };
 
   constructor(private readonly options: SimulatorOptions = {}) {
+    this.profile = options.profile ?? DEFAULT_PROFILE;
+    this.gearRatios = this.profile.gearRatios ?? [95, 55, 38, 28, 22, 18];
     this.tickMs = 1000 / (options.tickHz ?? 20);
     this.coolant = options.ambientTemp ?? 18;
     this.fuel = options.initialFuel ?? 68;
@@ -206,22 +216,29 @@ export class VehicleSimulator {
     // 2. Caja de cambios: elige la marcha que deja las rpm en zona útil.
     if (this.speed < 1) {
       const coldFactor = clamp((60 - this.coolant) / 60, 0, 1);
-      const idleTarget = IDLE_RPM + (COLD_IDLE_RPM - IDLE_RPM) * coldFactor;
+      const idleTarget = this.profile.idleRpm + COLD_IDLE_EXTRA * coldFactor;
       this.rpm = approach(this.rpm, idleTarget + jitter(15), 2000 * dt);
     } else {
+      // Punto de cambio: un diésel cambia mucho antes que un gasolina,
+      // en torno al 70 % de su régimen máximo.
+      const shiftPoint = this.profile.maxRpm * 0.7;
       let gearRpm = 0;
-      for (const ratio of GEAR_RPM_PER_KMH) {
+      for (const ratio of this.gearRatios) {
         gearRpm = this.speed * ratio;
-        if (gearRpm < 3100) break; // cambia de marcha antes de pasar de ~3100
+        if (gearRpm < shiftPoint) break;
       }
-      const targetRpm = clamp(gearRpm + this.throttle * 8, IDLE_RPM, 6500);
-      const maxRpm = this.scenario.limits?.maxRpm ?? 6500;
+      const ceiling = this.profile.maxRpm;
+      const targetRpm = clamp(gearRpm + this.throttle * 5, this.profile.idleRpm, ceiling);
+      const maxRpm = this.scenario.limits?.maxRpm ?? ceiling;
       this.rpm = approach(this.rpm, Math.min(targetRpm, maxRpm), 3500 * dt);
     }
 
     // 3. Carga y turbo.
     this.load = clamp(this.throttle * 0.9 + this.speed * 0.1, 3, 100);
-    const boostTarget = this.rpm > 1800 ? clamp(((this.load - 25) / 75) * 1.4, 0, 1.4) : 0;
+    // El turbo de un diésel sopla desde muy abajo (400 Nm a 1.600 rpm).
+    const maxBoost = this.profile.maxBoostBar ?? 1.4;
+    const boostTarget =
+      this.rpm > 1300 ? clamp(((this.load - 15) / 85) * maxBoost, 0, maxBoost) : 0;
     const emergencyCap = this.scenario.limits ? 0.25 : Infinity;
     this.boost = approach(this.boost, Math.min(boostTarget, emergencyCap), 2.2 * dt);
 
@@ -237,9 +254,14 @@ export class VehicleSimulator {
 
     // 6. Consumo y combustible.
     this.fuelRate = this.engineRunning
-      ? clamp(0.8 + (this.load / 100) * (this.rpm / 1000) * 3.2, 0.6, 45)
+      ? // Calibrado sobre el consumo real del OM612: ~0,9 L/h al ralentí,
+        // ~8 L/h en autopista a 120 km/h y hasta ~35 L/h a plena carga.
+        clamp(0.9 + (this.load / 100) * (this.rpm / 1000) * 8.0, 0.7, 38)
       : 0;
-    this.fuel = Math.max(0, this.fuel - (this.fuelRate / 3600) * dt * (100 / 55)); // depósito de 55 L
+    this.fuel = Math.max(
+      0,
+      this.fuel - (this.fuelRate / 3600) * dt * (100 / this.profile.tankLiters),
+    );
 
     // 7. Posición: integra la velocidad sobre un rumbo que deriva lentamente.
     const distKm = (this.speed / 3600) * dt;

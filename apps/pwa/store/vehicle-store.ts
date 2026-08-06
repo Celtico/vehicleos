@@ -28,6 +28,11 @@ import { TelemetryClient, type TelemetryLinkState } from "@vehicleos/telemetry";
 import { createKeyValueStore, createOfflineQueue } from "@vehicleos/storage";
 import { DEFAULT_API_URL, DEFAULT_WS_URL, VEHICLE_ID } from "../lib/env";
 
+/** Muestras retenidas para las gráficas: 5 minutos a 1 Hz. */
+const MAX_HISTORY = 300;
+/** Periodo de muestreo del histórico en ms (1 Hz basta para una gráfica). */
+const HISTORY_INTERVAL_MS = 1000;
+
 /** Máximo de puntos GPS retenidos para el mapa. */
 const MAX_PATH_POINTS = 3000;
 /** Distancia mínima (grados aprox.) para registrar un punto nuevo de ruta. */
@@ -59,7 +64,21 @@ interface PersistedSettings {
 let unsubscribeLive: (() => void) | null = null;
 let telemetryClient: TelemetryClient | null = null;
 let lastDtcCheck = 0;
+let lastHistorySample = 0;
 const settingsStore = createKeyValueStore();
+
+/** Serie temporal simple para las gráficas del cuadro. */
+export interface HistoryPoint {
+  t: number;
+  v: number;
+}
+
+export interface TelemetryHistory {
+  coolant: HistoryPoint[];
+  boost: HistoryPoint[];
+  voltage: HistoryPoint[];
+  speed: HistoryPoint[];
+}
 
 export interface VehicleStore {
   /** Tipo de provider activo. */
@@ -71,6 +90,12 @@ export interface VehicleStore {
   dtc: DiagnosticTroubleCode[];
   /** Ruta GPS acumulada del stream en vivo (para /map). */
   path: GeoPoint[];
+  /**
+   * Histórico reciente para las gráficas (5 min a 1 Hz).
+   * Se muestrea aparte del stream porque los gauges van a 20 Hz y una
+   * gráfica no necesita esa resolución.
+   */
+  history: TelemetryHistory;
   scenario: ScenarioId;
   engineOn: boolean;
   /** Envío de telemetría al backend. */
@@ -111,6 +136,7 @@ export const useVehicleStore = create<VehicleStore>((set, get) => ({
   telemetry: null,
   dtc: [],
   path: [],
+  history: { coolant: [], boost: [], voltage: [], speed: [] },
   scenario: "city",
   engineOn: false,
   telemetryEnabled: false,
@@ -180,7 +206,23 @@ export const useVehicleStore = create<VehicleStore>((set, get) => ({
         }
       }
 
-      set({ telemetry: t, engineOn: t.engineRunning, path });
+      // Histórico a 1 Hz para las gráficas.
+      let history = state.history;
+      if (t.timestamp - lastHistorySample >= HISTORY_INTERVAL_MS) {
+        lastHistorySample = t.timestamp;
+        const push = (serie: HistoryPoint[], v: number): HistoryPoint[] => [
+          ...serie.slice(-MAX_HISTORY + 1),
+          { t: t.timestamp, v },
+        ];
+        history = {
+          coolant: push(history.coolant, t.coolantTemp),
+          boost: push(history.boost, t.turboPressure),
+          voltage: push(history.voltage, t.batteryVoltage),
+          speed: push(history.speed, t.speed),
+        };
+      }
+
+      set({ telemetry: t, engineOn: t.engineRunning, path, history });
 
       // Revisión periódica de DTC (llamada local barata, cada 2 s).
       if (t.timestamp - lastDtcCheck > 2000) {
@@ -327,7 +369,7 @@ export const useVehicleStore = create<VehicleStore>((set, get) => ({
   },
 
   clearPath() {
-    set({ path: [] });
+    set({ path: [], history: { coolant: [], boost: [], voltage: [], speed: [] } });
   },
 }));
 

@@ -5,6 +5,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Clock } from "../components/Clock";
+import { CockpitNotifications } from "../components/CockpitNotifications";
 import { ConnectionBadge } from "../components/ConnectionBadge";
 import { Providers } from "../components/Providers";
 import { ServiceWorkerRegister } from "../components/ServiceWorkerRegister";
@@ -55,6 +56,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               </header>
               <main className="min-h-0 flex-1 overflow-y-auto">{children}</main>
             </div>
+            {/* Avisos por encima de todo, visibles en cualquier pantalla. */}
+            <CockpitNotifications />
           </div>
           <ServiceWorkerRegister />
         </Providers>

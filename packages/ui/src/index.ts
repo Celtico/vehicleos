@@ -14,4 +14,23 @@ export { LinearGauge, type LinearGaugeProps } from "./LinearGauge";
 export { StatusLight, type StatusLightProps, type StatusLightKind } from "./StatusLight";
 export { BatteryIndicator, type BatteryIndicatorProps } from "./BatteryIndicator";
 export { TelemetryTile, type TelemetryTileProps } from "./TelemetryTile";
+export {
+  TimeSeriesChart,
+  submuestrear,
+  type TimeSeriesChartProps,
+  type SeriesPoint,
+} from "./TimeSeriesChart";
+export {
+  NotificationStack,
+  type NotificationStackProps,
+  type CockpitNotification,
+  type NotificationSeverity,
+} from "./Notifications";
 export { Screen, Card, type ScreenProps, type CardProps } from "./layout";
+export {
+  VehicleModel,
+  type VehicleModelProps,
+  type VehiclePartId,
+  type PartSeverity,
+} from "./VehicleModel";
+export { WheelBadge, type WheelBadgeProps } from "./WheelBadge";

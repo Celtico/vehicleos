@@ -358,6 +358,110 @@ export const DTC_KNOWLEDGE: Record<string, DtcKnowledgeEntry> = {
     canDrive:
       "Si el motor funciona, hazlo solo para llegar al taller: puede pararse en cualquier momento o no volver a arrancar. No planifiques viajes.",
   },
+  // ── Específicos de motores diésel de inyección directa (p. ej. OM612) ──
+  P0380: {
+    code: "P0380",
+    title: "Circuito de calentadores (bujías de precalentamiento)",
+    system: "Arranque en frío (diésel)",
+    probableCause: "Una o varias bujías de precalentamiento fundidas",
+    probability: 75,
+    causes: [
+      "Bujía de precalentamiento fundida (habitual a partir de 100.000 km)",
+      "Relé de calentadores averiado",
+      "Cableado del circuito de calentadores en mal estado",
+      "Fallo de la unidad de control de precalentamiento",
+    ],
+    solutions: [
+      "Medir la resistencia de cada calentador y sustituir los fundidos",
+      "Comprobar el relé de calentadores",
+      "Revisar el conector y el cableado del circuito",
+    ],
+    severity: "medium",
+    canDrive:
+      "Se puede circular sin riesgo mecánico, pero costará arrancar en frío y el motor irá irregular y humeante los primeros minutos. En invierno puede llegar a no arrancar.",
+  },
+  P0088: {
+    code: "P0088",
+    title: "Presión del raíl de inyección demasiado alta",
+    system: "Alimentación (common rail)",
+    probableCause: "Regulador de presión del raíl defectuoso",
+    probability: 60,
+    causes: [
+      "Regulador/válvula de presión del raíl averiado",
+      "Sensor de presión del raíl dando lecturas erróneas",
+      "Retorno de inyectores obstruido",
+      "Bomba de alta presión con desgaste",
+    ],
+    solutions: [
+      "Leer la presión del raíl en vivo y compararla con la de consigna",
+      "Sustituir el regulador de presión",
+      "Comprobar el caudal de retorno de los inyectores",
+    ],
+    severity: "high",
+    canDrive:
+      "Circula lo justo para llegar al taller: una presión descontrolada puede dañar inyectores y bomba, que son las piezas más caras del motor.",
+  },
+  P0093: {
+    code: "P0093",
+    title: "Fuga grande en el sistema de combustible",
+    system: "Alimentación (common rail)",
+    probableCause: "Retorno excesivo por inyectores desgastados",
+    probability: 65,
+    causes: [
+      "Inyectores con retorno excesivo por desgaste",
+      "Fuga en tuberías de alta presión",
+      "Bomba de alta presión desgastada",
+      "Regulador de presión que no mantiene consigna",
+    ],
+    solutions: [
+      "Prueba de retorno de inyectores con probetas",
+      "Inspección visual de tuberías y racores de alta presión",
+      "Reconstruir o sustituir los inyectores afectados",
+    ],
+    severity: "high",
+    canDrive:
+      "No conviene alargarlo: además de pérdida de potencia y arranques difíciles, una fuga de gasóleo a presión es un riesgo de incendio. Al taller cuanto antes.",
+  },
+  P0234: {
+    code: "P0234",
+    title: "Sobrepresión de turbo",
+    system: "Sobrealimentación",
+    probableCause: "Geometría variable del turbo agarrotada en posición cerrada",
+    probability: 70,
+    causes: [
+      "Varillaje de la geometría variable agarrotado por carbonilla",
+      "Actuador de vacío del turbo defectuoso",
+      "Electroválvula de control de turbo averiada",
+      "Sensor de presión del colector mal calibrado",
+    ],
+    solutions: [
+      "Limpiar y liberar el varillaje de la geometría variable",
+      "Comprobar el vacío que llega al actuador",
+      "Sustituir la electroválvula de control",
+    ],
+    severity: "high",
+    canDrive:
+      "Evita exigirle: la sobrepresión repetida castiga turbo y junta de culata. Conduciendo suave y sin pisar a fondo puedes llegar al taller.",
+  },
+  P0470: {
+    code: "P0470",
+    title: "Sensor de presión de escape",
+    system: "Escape",
+    probableCause: "Sensor o tubo de toma de presión obstruido por carbonilla",
+    probability: 65,
+    causes: [
+      "Tubo de toma de presión taponado de hollín",
+      "Sensor de presión de escape defectuoso",
+      "Conector con humedad o corrosión",
+    ],
+    solutions: [
+      "Desmontar y limpiar el tubo de toma de presión",
+      "Sustituir el sensor si sigue fuera de rango",
+    ],
+    severity: "low",
+    canDrive:
+      "Puedes seguir circulando semanas. Como mucho notarás alguna entrada en modo de emergencia puntual y algo más de consumo.",
+  },
   P0301: {
     code: "P0301",
     title: "Fallo de encendido en el cilindro 1",
