@@ -20,7 +20,7 @@ export interface InfoListProps {
 export function InfoList({ title, rows }: InfoListProps) {
   return (
     <div className="flex h-full flex-col panel-cockpit rounded-2xl p-3">
-      <span className="mb-2 block text-[11.5px] uppercase tracking-[0.1em] text-accent">
+      <span className="mb-2 block text-[11.5px] font-semibold uppercase tracking-[0.1em] text-accent">
         {title}
       </span>
       <ul className="flex flex-1 flex-col justify-around">
@@ -28,9 +28,11 @@ export function InfoList({ title, rows }: InfoListProps) {
           <li key={r.label} className="flex items-center justify-between gap-2">
             <span className="flex min-w-0 items-center gap-2">
               {r.icon ? <span className="shrink-0 text-muted">{r.icon}</span> : null}
-              <span className="truncate text-[12.5px] text-muted">{r.label}</span>
+              <span className="truncate text-[12.5px] font-medium text-muted">{r.label}</span>
             </span>
-            <span className="shrink-0 text-[13px] tabular-nums text-silver">{r.value}</span>
+            <span className="shrink-0 text-[13px] font-semibold tabular-nums text-silver">
+              {r.value}
+            </span>
           </li>
         ))}
       </ul>

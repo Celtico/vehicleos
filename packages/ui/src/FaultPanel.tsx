@@ -35,7 +35,7 @@ export function FaultPanel({ faults, onSelect, onSeeAll, max = 3 }: FaultPanelPr
     <div className="panel-cockpit flex h-full flex-col rounded-2xl p-3">
       <div className="mb-2 flex items-center justify-between">
         <span
-          className="truncate text-[11.5px] uppercase tracking-[0.1em]"
+          className="truncate text-[11.5px] font-semibold uppercase tracking-[0.1em]"
           style={{ color: faults.length > 0 ? MBUX.danger : MBUX.muted }}
         >
           Averías activas
@@ -97,10 +97,12 @@ export function FaultPanel({ faults, onSelect, onSeeAll, max = 3 }: FaultPanelPr
                     <circle cx="12" cy="16.6" r="0.9" fill={color} />
                   </svg>
                   <span className="min-w-0 flex-1">
-                    <span className="block font-mono text-xs" style={{ color }}>
+                    <span className="block font-mono text-sm font-semibold" style={{ color }}>
                       {f.code}
                     </span>
-                    <span className="block truncate text-[12.5px] text-muted">{f.title}</span>
+                    <span className="block truncate text-[12.5px] font-medium text-muted">
+                      {f.title}
+                    </span>
                   </span>
                 </button>
               </li>
@@ -112,7 +114,7 @@ export function FaultPanel({ faults, onSelect, onSeeAll, max = 3 }: FaultPanelPr
       {faults.length > 0 && onSeeAll ? (
         <button
           onClick={onSeeAll}
-          className="mt-1.5 w-full rounded-xl border border-linea/20 py-1.5 text-[11px] uppercase tracking-[0.1em] text-muted transition-colors hover:border-accent/40 hover:text-accent"
+          className="mt-1.5 w-full rounded-xl border border-linea/20 py-1.5 text-[11px] font-semibold uppercase tracking-[0.1em] text-muted transition-colors hover:border-accent/40 hover:text-accent"
         >
           {restantes > 0 ? `Ver las ${faults.length}` : "Ver diagnóstico"}
         </button>

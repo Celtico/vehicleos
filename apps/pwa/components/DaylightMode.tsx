@@ -22,17 +22,32 @@ import { useVehicleStore } from "../store/vehicle-store";
 const REFRESCO_MS = 60_000;
 
 export function DaylightMode() {
-  const location = useVehicleStore((s) => s.telemetry?.location);
+  /**
+   * Se redondea la posición a ~11 km antes de usarla como dependencia.
+   *
+   * Sin esto el efecto se reejecutaba con CADA muestra de telemetría, porque
+   * las coordenadas cambian constantemente: se recreaba el temporizador sin
+   * parar y se pisaba cualquier tema puesto a mano. Para saber si ha
+   * amanecido, una décima de grado sobra.
+   */
+  const zona = useVehicleStore((s) => {
+    const l = s.telemetry?.location;
+    return l ? `${l.lat.toFixed(1)},${l.lon.toFixed(1)}` : "";
+  });
 
   useEffect(() => {
+    const pos = zona
+      ? { lat: Number(zona.split(",")[0]), lon: Number(zona.split(",")[1]) }
+      : undefined;
+
     const aplicar = () => {
-      const tema: Daylight = daylightAt(location);
+      const tema: Daylight = daylightAt(pos);
       document.documentElement.dataset.tema = tema === "day" ? "dia" : "noche";
     };
     aplicar();
     const id = setInterval(aplicar, REFRESCO_MS);
     return () => clearInterval(id);
-  }, [location]);
+  }, [zona]);
 
   return null;
 }
