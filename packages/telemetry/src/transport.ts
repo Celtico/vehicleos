@@ -29,6 +29,15 @@ export interface TransportOptions {
   url: string;
   /** Token JWT; viaja en el handshake (`auth.token`). */
   token?: string;
+  /**
+   * Ruta del punto de entrada de socket.io. Por defecto "/socket.io".
+   *
+   * Hace falta cuando el backend vive detrás de un proxy bajo un prefijo:
+   * con el cockpit y la API en el mismo dominio (la API en /api), socket.io
+   * queda en "/api/socket.io". Servirlo todo desde un solo origen elimina
+   * el CORS, que es de lo que más se rompe en un despliegue.
+   */
+  path?: string;
 }
 
 /** Fábrica de transportes (inyectable en tests). */

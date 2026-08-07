@@ -25,6 +25,7 @@ class SocketIoTransport implements TelemetryTransport {
       transports: ["websocket"], // sin long-polling: menos batería y latencia
       reconnection: false,
       auth: options.token ? { token: options.token } : undefined,
+      ...(options.path ? { path: options.path } : {}),
     });
 
     this.socket.on("connect", () => this.onOpen?.());

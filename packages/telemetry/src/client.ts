@@ -36,6 +36,11 @@ export interface TelemetryClientOptions {
   url: string;
   /** Token JWT; viaja en el handshake del socket. */
   token?: string;
+  /**
+   * Ruta de socket.io cuando el backend está detrás de un prefijo de proxy
+   * (p. ej. "/api/socket.io"). Por defecto, la estándar "/socket.io".
+   */
+  socketPath?: string;
   /** Muestras por lote (por defecto 5). */
   batchSize?: number;
   /** Periodo de muestreo en ms (por defecto 1000 → 1 Hz). */
@@ -57,6 +62,7 @@ export class TelemetryClient {
   private readonly vehicleId: string;
   private readonly url: string;
   private readonly token?: string;
+  private readonly socketPath?: string;
   private readonly batchSize: number;
   private readonly sampleIntervalMs: number;
   private readonly queue: OfflineQueue;
@@ -84,6 +90,7 @@ export class TelemetryClient {
     this.vehicleId = options.vehicleId;
     this.url = options.url;
     this.token = options.token;
+    this.socketPath = options.socketPath;
     this.batchSize = options.batchSize ?? 5;
     this.sampleIntervalMs = options.sampleIntervalMs ?? 1000;
     this.queue = options.queue ?? createOfflineQueue();
@@ -243,7 +250,11 @@ export class TelemetryClient {
 
     let transport: TelemetryTransport;
     try {
-      transport = this.transportFactory({ url: this.url, token: this.token });
+      transport = this.transportFactory({
+        url: this.url,
+        token: this.token,
+        ...(this.socketPath ? { path: this.socketPath } : {}),
+      });
     } catch {
       this.scheduleReconnect();
       return;

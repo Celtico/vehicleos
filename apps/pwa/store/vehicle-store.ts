@@ -26,7 +26,7 @@ import {
 import type { ScenarioId } from "@vehicleos/vehicle-simulator";
 import { TelemetryClient, type TelemetryLinkState } from "@vehicleos/telemetry";
 import { createKeyValueStore, createOfflineQueue } from "@vehicleos/storage";
-import { DEFAULT_API_URL, DEFAULT_WS_URL, VEHICLE_ID } from "../lib/env";
+import { DEFAULT_API_URL, DEFAULT_SOCKET_PATH, DEFAULT_WS_URL, VEHICLE_ID } from "../lib/env";
 
 /** Muestras retenidas para las gráficas: 5 minutos a 1 Hz. */
 const MAX_HISTORY = 300;
@@ -327,6 +327,7 @@ export const useVehicleStore = create<VehicleStore>((set, get) => ({
       vehicleId,
       url: wsUrl,
       token: authToken || undefined,
+      ...(DEFAULT_SOCKET_PATH ? { socketPath: DEFAULT_SOCKET_PATH } : {}),
       queue: createOfflineQueue(),
       onStateChange: (link) => set({ telemetryLink: link }),
     });

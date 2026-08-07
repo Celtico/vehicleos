@@ -52,6 +52,25 @@ Deja la landing en el puerto 8080, el cockpit en el 3000 y la API en el 3001. La
 por la red interna. Las migraciones de Prisma se aplican solas al arrancar,
 así que un despliegue nuevo no necesita pasos manuales.
 
+### Detrás de un proxy con dominio propio
+
+Hacen falta **dos nombres**, y solo por un motivo: el cockpit es una PWA y
+quiere la raíz de su dominio, porque el service worker toma como alcance la
+carpeta desde la que se sirve y la instalación desde un subdirectorio da
+problemas. La landing, que no tiene esa exigencia, va en otro nombre.
+
+```
+coche.tudominio.com/          → cockpit (PWA)
+coche.tudominio.com/api/      → backend y WebSocket
+vehicleos.tudominio.com/      → landing
+```
+
+Ambos pueden ser subdominios del mismo dominio comprado. Poner la API bajo
+`/api` del mismo origen que el cockpit **elimina el CORS por completo**, que
+es la causa más habitual de que un despliegue deje de funcionar. Tienes un
+ejemplo de nginx listo para adaptar en
+[`docker/proxy.example.conf`](docker/proxy.example.conf).
+
 Dos cosas que suelen dar problemas y conviene saber de antemano:
 
 - `PUBLIC_API_URL` y `PUBLIC_WS_URL` son las direcciones a las que llegará
