@@ -154,22 +154,29 @@ export function GaugeArc({
       aria-valuemin={min}
       aria-valuemax={max}
       aria-valuenow={value}
-      style={{ display: "block", fontFamily: MBUX.font }}
+      // overflow visible: el halo desenfocado del arco sobresale del viewBox
+      // y un SVG recorta por defecto; sin esto el resplandor sale cortado en
+      // una línea recta por los bordes.
+      style={{ display: "block", fontFamily: MBUX.font, overflow: "visible" }}
     >
       <defs>
-        <filter id={`${uid}-blur`} x="-40%" y="-40%" width="180%" height="180%">
+        {/* Región generosa: con el arco corto (valor bajo) su caja es pequeña
+            y un margen del 40 % no le llegaba a la cola del desenfoque, que
+            aparecía cortada en un rectángulo. */}
+        <filter id={`${uid}-blur`} x="-100%" y="-100%" width="300%" height="300%">
           <feGaussianBlur stdDeviation="5" />
         </filter>
 
-        {/* Esfera: oscura arriba y aclarándose hacia abajo, que es como se ve
-            un reloj real: el bisel le hace sombra por arriba y abajo recoge
-            luz rebotada. Al revés (luz arriba) el lavado claro caía justo
-            sobre la corona de cifras y las deslavaba. Los colores salen del
-            tema, así que cambia de día a noche sin tocar nada aquí. */}
-        <radialGradient id={`${uid}-esfera`} cx="0.5" cy="0.88" r="0.95">
+        {/* Esfera: clara arriba y oscureciéndose hacia abajo, a juego con la
+            luz cenital del resto del cockpit (los paneles y el coche 3D
+            reciben la luz por arriba). Los colores salen del tema, así que
+            cambia de día a noche sin tocar nada aquí. */}
+        <radialGradient id={`${uid}-esfera`} cx="0.5" cy="0.12" r="0.95">
           <stop offset="0%" stopColor="var(--c-esfera-0)" />
-          <stop offset="50%" stopColor="var(--c-esfera-1)" />
-          <stop offset="100%" stopColor="var(--c-esfera-2)" />
+          <stop offset="45%" stopColor="var(--c-esfera-1)" />
+          {/* El pie de la esfera se disuelve: el fondo del cockpit (y el
+              coche 3D) asoman por debajo, igual que hace el bisel. */}
+          <stop offset="100%" stopColor="var(--c-esfera-2)" stopOpacity="0" />
         </radialGradient>
 
         {/* Máscara del arco: el relleno gana cuerpo según avanza, en lugar de
@@ -185,13 +192,14 @@ export function GaugeArc({
           <rect x="0" y="0" width="200" height="200" fill={`url(#${uid}-fundido)`} />
         </mask>
 
-        {/* Bisel: un aro que recoge la luz arriba y se apaga abajo, no una
-            línea de grosor constante. A trazo plano, en tema claro el borde
-            es casi negro y encierra el reloj en un contorno duro. */}
+        {/* Bisel: un aro que recoge la luz arriba y se DISUELVE del todo por
+            abajo (transparente), no una línea de grosor constante. A trazo
+            plano, en tema claro el borde es casi negro y encierra el reloj
+            en un contorno duro. */}
         <linearGradient id={`${uid}-bisel`} x1="0.3" y1="0" x2="0.7" y2="1">
           <stop offset="0%" stopColor={`rgb(var(--c-border) / 0.34)`} />
-          <stop offset="45%" stopColor={`rgb(var(--c-border) / 0.16)`} />
-          <stop offset="100%" stopColor={`rgb(var(--c-border) / 0.06)`} />
+          <stop offset="45%" stopColor={`rgb(var(--c-border) / 0.14)`} />
+          <stop offset="100%" stopColor={`rgb(var(--c-border) / 0)`} />
         </linearGradient>
       </defs>
 
@@ -217,9 +225,19 @@ export function GaugeArc({
         strokeLinecap="round"
       />
 
-      {/* Zonas de color, sobre la propia pista */}
+      {/* Zonas de color, sobre la propia pista. Remate redondo: la pista
+          termina en punta redonda y una zona con corte plano en el mismo
+          ángulo se veía cortada a cuchillo. */}
       {zonePaths.map((z, i) => (
-        <path key={i} d={z.d} fill="none" stroke={z.color} strokeWidth={9} opacity={0.9} />
+        <path
+          key={i}
+          d={z.d}
+          fill="none"
+          stroke={z.color}
+          strokeWidth={9}
+          strokeLinecap="round"
+          opacity={0.9}
+        />
       ))}
 
       {/* Halo del progreso */}
