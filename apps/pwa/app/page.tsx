@@ -129,6 +129,22 @@ export default function DashboardPage() {
     return { distancia: km, consumo, minutos, autonomia, litrosRestantes };
   }, [history.speed, history.fuelRate, t?.fuelLevel]);
 
+  /**
+   * Consumo instantáneo, el de la caja junto al cuentavueltas.
+   *
+   * No es el mismo dato que el consumo medio del viaje: se calculaba igual y
+   * salían los dos números idénticos en dos sitios de la pantalla. Parado, los
+   * L/100km no existen (dividir por velocidad cero), así que se enseña el
+   * caudal en L/h, que es lo que hace cualquier ordenador de a bordo.
+   */
+  const instantaneo = useMemo(() => {
+    const caudal = t?.fuelRate ?? 0;
+    const v = t?.speed ?? 0;
+    if (!t?.engineRunning) return { valor: null, unidad: "L/100km" };
+    if (v < 5) return { valor: caudal, unidad: "L/h" };
+    return { valor: (caudal / v) * 100, unidad: "L/100km" };
+  }, [t?.fuelRate, t?.speed, t?.engineRunning]);
+
   const fmt = (v: number | null, dec: number) => (v === null ? "—" : v.toFixed(dec));
 
   const tiempo =
@@ -137,7 +153,7 @@ export default function DashboardPage() {
       : `0:${String(viaje.minutos).padStart(2, "0")}`;
 
   return (
-    <div className="flex h-full flex-col gap-2 px-3 pb-1 pt-1">
+    <div className="flex h-full flex-col gap-2 px-4 pb-1 pt-1">
       {/* ── Fila principal: velocidad · coche · régimen ───────── */}
       <div className="flex min-h-0 flex-1 items-stretch gap-2">
         {/* Velocímetro, con el limitador debajo */}
@@ -189,7 +205,7 @@ export default function DashboardPage() {
               value={t?.fuelLevel ?? 0}
               unit="%"
               max={100}
-              danger={10}
+              dangerBelow={10}
               icon={
                 <svg viewBox="0 0 24 24" className="h-[30px] w-[30px]" {...trazo}>
                   <path d="M5 20V5a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v15M3.5 20h11M13 10.5h3a2 2 0 0 1 2 2v3.5a1.5 1.5 0 0 0 3 0V9l-2.5-2.5" />
@@ -202,6 +218,7 @@ export default function DashboardPage() {
               unit="V"
               min={8}
               max={16}
+              dangerBelow={11.8}
               decimals={1}
               icon={
                 <svg viewBox="0 0 24 24" className="h-[30px] w-[30px]" {...trazo}>
@@ -297,8 +314,10 @@ export default function DashboardPage() {
               Consumo
             </span>
             <span className="text-sm font-semibold tabular-nums text-silver">
-              {fmt(viaje.consumo, 1)}
-              <span className="ml-1 text-[10px] font-normal text-muted">L/100km</span>
+              {fmt(instantaneo.valor, 1)}
+              <span className="ml-1 text-[10px] font-normal text-muted">
+                {instantaneo.unidad}
+              </span>
             </span>
           </div>
         </div>
@@ -334,7 +353,7 @@ export default function DashboardPage() {
                 ),
               },
               {
-                l: "Consumo",
+                l: "Consumo medio",
                 v: fmt(viaje.consumo, 1),
                 u: "L/100km",
                 i: (
@@ -367,11 +386,11 @@ export default function DashboardPage() {
                   i > 0 ? "border-l border-linea/15" : ""
                 }`}
               >
-                <span className="flex max-w-full items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.04em] text-accent">
-                  <svg viewBox="0 0 24 24" className="h-[19px] w-[19px] shrink-0" {...trazo}>
-                    {d.i}
-                  </svg>
-                  <span className="truncate">{d.l}</span>
+                <svg viewBox="0 0 24 24" className="h-7 w-7 text-accent" {...trazo}>
+                  {d.i}
+                </svg>
+                <span className="mt-1 max-w-full truncate text-[10px] font-semibold uppercase tracking-[0.04em] text-accent">
+                  {d.l}
                 </span>
                 <span className="flex items-baseline gap-1">
                   <span className="text-[22px] font-semibold leading-tight tabular-nums text-silver">

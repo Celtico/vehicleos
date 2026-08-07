@@ -43,11 +43,11 @@ export function FaultPanel({
     <div
       className={
         plain
-          ? "flex h-full flex-col py-1"
+          ? "flex h-full flex-col px-2 py-1"
           : "panel-cockpit flex h-full flex-col rounded-2xl p-3"
       }
     >
-      <div className="mb-2 flex items-center justify-between">
+      <div className={`flex items-center justify-between ${plain ? "mb-3" : "mb-2"}`}>
         <span
           className="truncate text-[11.5px] font-semibold uppercase tracking-[0.1em]"
           style={{ color: faults.length > 0 ? MBUX.danger : MBUX.muted }}

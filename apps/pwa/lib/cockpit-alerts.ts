@@ -24,6 +24,17 @@ const HISTERESIS_TEMP = 3;
 const HISTERESIS_VOLTAJE = 0.3;
 const HISTERESIS_COMBUSTIBLE = 2;
 
+/**
+ * De qué condición nace el aviso. Hace falta para poder callar en pantalla
+ * los avisos cuya información ya está permanentemente a la vista.
+ */
+export type OrigenAviso = "dtc" | "temp" | "bateria" | "combustible";
+
+/** Aviso del cockpit con su origen. */
+export interface AvisoCockpit extends CockpitNotification {
+  origen: OrigenAviso;
+}
+
 /** Estado de las condiciones ya avisadas. */
 export interface AlertState {
   overheat: boolean;
@@ -61,8 +72,8 @@ export function evaluarAvisos(
   state: AlertState,
   telemetry: VehicleTelemetry | null,
   dtc: DiagnosticTroubleCode[],
-): CockpitNotification[] {
-  const avisos: CockpitNotification[] = [];
+): AvisoCockpit[] {
+  const avisos: AvisoCockpit[] = [];
 
   // Primera pasada: se toma nota de lo que ya había sin avisar de ello.
   // Al arrancar el coche no tiene sentido soltar de golpe todas las averías
@@ -80,6 +91,7 @@ export function evaluarAvisos(
     const info = explainDtc(d.code);
     avisos.push({
       id: nuevoId("dtc"),
+      origen: "dtc",
       severity:
         info.severity === "critical" || info.severity === "high" ? "critical" : "warning",
       title: `Nueva avería: ${d.code}`,
@@ -99,6 +111,7 @@ export function evaluarAvisos(
     state.overheat = true;
     avisos.push({
       id: nuevoId("temp"),
+      origen: "temp",
       severity: "critical",
       title: "Motor sobrecalentado",
       detail: `Refrigerante a ${telemetry.coolantTemp.toFixed(0)} °C. Detén el vehículo en cuanto sea seguro.`,
@@ -116,6 +129,7 @@ export function evaluarAvisos(
     state.lowBattery = true;
     avisos.push({
       id: nuevoId("bat"),
+      origen: "bateria",
       severity: "warning",
       title: "Batería no está cargando",
       detail: `${telemetry.batteryVoltage.toFixed(1)} V con el motor en marcha. Posible fallo del alternador.`,
@@ -132,6 +146,7 @@ export function evaluarAvisos(
     state.lowFuel = true;
     avisos.push({
       id: nuevoId("fuel"),
+      origen: "combustible",
       severity: "info",
       title: "Combustible bajo",
       detail: `Queda un ${telemetry.fuelLevel.toFixed(0)} % del depósito.`,

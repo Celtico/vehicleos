@@ -118,7 +118,7 @@ export function BottomNav() {
   return (
     <nav
       aria-label="Navegación principal"
-      className="mx-3 mb-1 flex shrink-0 items-center justify-between px-2 pb-0.5 pt-1.5"
+      className="mx-4 mb-1 flex shrink-0 items-center justify-between px-2 pb-0.5 pt-1.5"
     >
       {ITEMS.map((item) => {
         const activa = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);

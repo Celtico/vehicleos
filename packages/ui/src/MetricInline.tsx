@@ -22,8 +22,18 @@ export interface MetricInlineProps {
   unit: string;
   min?: number;
   max: number;
-  /** Valor a partir del cual el arco pasa a rojo. */
+  /**
+   * Valor a partir del cual el arco pasa a rojo, por arriba.
+   * Para temperatura o presión, donde lo que preocupa es pasarse.
+   */
   danger?: number;
+  /**
+   * Valor por debajo del cual el arco pasa a rojo.
+   * Para combustible o tensión de batería, donde lo que preocupa es quedarse
+   * corto: aplicarles `danger` los pintaba en rojo salvo cuando el depósito
+   * estaba casi vacío, exactamente al revés.
+   */
+  dangerBelow?: number;
   decimals?: number;
   /** Icono SVG inline, dentro del arco. */
   icon?: React.ReactNode;
@@ -44,6 +54,7 @@ export function MetricInline({
   min = 0,
   max,
   danger,
+  dangerBelow,
   decimals = 0,
   icon,
   size = 64,
@@ -55,7 +66,9 @@ export function MetricInline({
     if (numeroRef.current) numeroRef.current.textContent = v.toFixed(decimals);
     if (arcoRef.current) {
       const t = clamp((v - min) / (max - min), 0, 1);
-      const rojo = danger !== undefined && v >= danger;
+      const rojo =
+        (danger !== undefined && v >= danger) ||
+        (dangerBelow !== undefined && v <= dangerBelow);
       arcoRef.current.setAttribute("stroke-dasharray", `${LARGO * t} ${CIRCUNFERENCIA}`);
       arcoRef.current.setAttribute("stroke", rojo ? MBUX.danger : MBUX.accent);
     }
