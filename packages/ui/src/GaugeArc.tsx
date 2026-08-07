@@ -161,12 +161,14 @@ export function GaugeArc({
           <feGaussianBlur stdDeviation="5" />
         </filter>
 
-        {/* Esfera: la luz entra por arriba a la izquierda, como en el resto
-            del cockpit. Los colores salen del tema, así que el reloj cambia
-            de día a noche sin tocar nada aquí. */}
-        <radialGradient id={`${uid}-esfera`} cx="0.34" cy="0.24" r="0.92">
+        {/* Esfera: oscura arriba y aclarándose hacia abajo, que es como se ve
+            un reloj real: el bisel le hace sombra por arriba y abajo recoge
+            luz rebotada. Al revés (luz arriba) el lavado claro caía justo
+            sobre la corona de cifras y las deslavaba. Los colores salen del
+            tema, así que cambia de día a noche sin tocar nada aquí. */}
+        <radialGradient id={`${uid}-esfera`} cx="0.5" cy="0.88" r="0.95">
           <stop offset="0%" stopColor="var(--c-esfera-0)" />
-          <stop offset="55%" stopColor="var(--c-esfera-1)" />
+          <stop offset="50%" stopColor="var(--c-esfera-1)" />
           <stop offset="100%" stopColor="var(--c-esfera-2)" />
         </radialGradient>
 

@@ -147,9 +147,11 @@ export function StatusLight({ kind, status, label, size = 62 }: StatusLightProps
       <span
         style={{
           fontSize: 10,
-          letterSpacing: 2,
+          // Menos espaciado y peso 600: a 10 px con letra fina y 2 px de
+          // separación, "AIRBAG" se deshacía en seis letras sueltas.
+          letterSpacing: 1.2,
           textTransform: "uppercase",
-          fontWeight: 300,
+          fontWeight: 600,
           color: active ? color : MBUX.muted,
         }}
       >
