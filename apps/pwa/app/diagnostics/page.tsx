@@ -40,7 +40,7 @@ export default function DiagnosticsPage() {
   return (
     <div className="flex flex-col gap-5 p-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-thin tracking-[0.2em] text-silver">DIAGNÓSTICO</h1>
+        <h1 className="text-xl font-medium tracking-[0.2em] text-silver">DIAGNÓSTICO</h1>
         <button
           onClick={handleClear}
           disabled={clearing || dtc.length === 0}
@@ -71,7 +71,7 @@ export default function DiagnosticsPage() {
                 strokeLinejoin="round"
               />
             </svg>
-            <p className="text-lg font-thin text-silver">Sin averías activas</p>
+            <p className="text-lg font-medium text-silver">Sin averías activas</p>
             <p className="text-sm text-muted">
               No hay códigos de diagnóstico almacenados en el vehículo.
             </p>
@@ -86,17 +86,17 @@ export default function DiagnosticsPage() {
               <div className="flex flex-col gap-4">
                 <div className="flex flex-wrap items-center gap-3">
                   <span className="font-mono text-2xl font-light text-accent">{d.code}</span>
-                  <span className="text-lg font-thin text-silver">{e.title}</span>
+                  <span className="text-lg font-medium text-silver">{e.title}</span>
                   <span
                     className={`rounded-full px-3 py-0.5 text-[10px] uppercase tracking-widest ${sev.className}`}
                   >
                     {sev.label}
                   </span>
-                  <span className="rounded-full bg-white/5 px-3 py-0.5 text-[10px] uppercase tracking-widest text-muted">
+                  <span className="rounded-full bg-linea/5 px-3 py-0.5 text-[10px] uppercase tracking-widest text-muted">
                     {STATUS_LABEL[d.status] ?? d.status}
                   </span>
                   {e.generic ? (
-                    <span className="rounded-full bg-white/5 px-3 py-0.5 text-[10px] uppercase tracking-widest text-muted">
+                    <span className="rounded-full bg-linea/5 px-3 py-0.5 text-[10px] uppercase tracking-widest text-muted">
                       Explicación genérica
                     </span>
                   ) : null}
@@ -132,7 +132,7 @@ export default function DiagnosticsPage() {
                   </div>
                 </div>
 
-                <div className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3">
+                <div className="rounded-xl border border-linea/10 bg-linea/[0.03] px-4 py-3">
                   <span className="text-[10px] uppercase tracking-[0.2em] text-muted">
                     ¿Puedo seguir conduciendo?
                   </span>

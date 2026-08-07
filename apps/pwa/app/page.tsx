@@ -380,12 +380,10 @@ export default function DashboardPage() {
                 ),
               },
             ].map((d, i) => (
-              <div
-                key={d.l}
-                className={`flex min-w-0 flex-col items-center px-1 ${
-                  i > 0 ? "border-l border-linea/15" : ""
-                }`}
-              >
+              <div key={d.l} className="relative flex min-w-0 flex-col items-center px-1">
+                {i > 0 ? (
+                  <span aria-hidden="true" className="filete-suave absolute inset-y-1 left-0" />
+                ) : null}
                 <svg viewBox="0 0 24 24" className="h-7 w-7 text-accent" {...trazo}>
                   {d.i}
                 </svg>

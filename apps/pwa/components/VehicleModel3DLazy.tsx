@@ -26,7 +26,7 @@ function Esqueleto() {
       aria-label="Cargando la vista 3D del vehículo"
     >
       <div className="flex flex-col items-center gap-2">
-        <div className="h-14 w-32 animate-pulse rounded-xl border border-white/10 bg-white/[0.04]" />
+        <div className="h-14 w-32 animate-pulse rounded-xl border border-linea/10 bg-linea/[0.04]" />
         <span className="text-[10px] uppercase tracking-[0.25em] text-muted">
           Preparando 3D
         </span>

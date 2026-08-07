@@ -17,7 +17,7 @@ export function Clock() {
   }, []);
 
   return (
-    <span suppressHydrationWarning className="text-lg font-thin tracking-widest text-silver">
+    <span suppressHydrationWarning className="text-lg font-medium tracking-widest text-silver">
       {time}
     </span>
   );

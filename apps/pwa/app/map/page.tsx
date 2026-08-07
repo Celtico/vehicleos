@@ -53,10 +53,12 @@ export default function MapPage() {
   return (
     <div className="flex flex-col gap-5 p-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-thin tracking-[0.2em] text-silver">MAPA · RUTA EN VIVO</h1>
+        <h1 className="text-xl font-medium tracking-[0.2em] text-silver">
+          MAPA · RUTA EN VIVO
+        </h1>
         <button
           onClick={clearPath}
-          className="rounded-lg border border-white/15 px-4 py-2 text-xs uppercase tracking-widest text-muted transition-colors hover:border-accent/40 hover:text-accent"
+          className="rounded-lg border border-linea/15 px-4 py-2 text-xs uppercase tracking-widest text-muted transition-colors hover:border-accent/40 hover:text-accent"
         >
           Limpiar ruta
         </button>
@@ -136,7 +138,7 @@ export default function MapPage() {
           </svg>
         ) : (
           <div className="flex h-[420px] flex-col items-center justify-center gap-2">
-            <p className="text-lg font-thin text-silver">Esperando señal GPS…</p>
+            <p className="text-lg font-medium text-silver">Esperando señal GPS…</p>
             <p className="text-sm text-muted">
               La ruta se dibujará según el vehículo se mueva (prueba el escenario Ciudad o
               Autopista en Ajustes).
@@ -161,7 +163,7 @@ export default function MapPage() {
 
 function Readout({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3">
+    <div className="rounded-xl border border-linea/10 bg-linea/[0.03] px-4 py-3">
       <p className="text-[10px] uppercase tracking-[0.2em] text-muted">{label}</p>
       <p className="mt-1 font-mono text-lg font-light text-silver">{value}</p>
     </div>

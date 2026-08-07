@@ -160,7 +160,32 @@ export function GaugeArc({
         <filter id={`${uid}-blur`} x="-40%" y="-40%" width="180%" height="180%">
           <feGaussianBlur stdDeviation="5" />
         </filter>
+
+        {/* Esfera: la luz entra por arriba a la izquierda, como en el resto
+            del cockpit. Los colores salen del tema, así que el reloj cambia
+            de día a noche sin tocar nada aquí. */}
+        <radialGradient id={`${uid}-esfera`} cx="0.34" cy="0.24" r="0.92">
+          <stop offset="0%" stopColor="var(--c-esfera-0)" />
+          <stop offset="55%" stopColor="var(--c-esfera-1)" />
+          <stop offset="100%" stopColor="var(--c-esfera-2)" />
+        </radialGradient>
+
+        {/* Máscara del arco: el relleno gana cuerpo según avanza, en lugar de
+            aparecer de golpe a plena intensidad. Va en la máscara y no en el
+            trazo a propósito: el color del arco cambia (turquesa o rojo según
+            la zona) y una máscara es indiferente al color. */}
+        <linearGradient id={`${uid}-fundido`} x1="0.06" y1="0.96" x2="0.94" y2="0.2">
+          <stop offset="0%" stopColor="#fff" stopOpacity="0.45" />
+          <stop offset="55%" stopColor="#fff" stopOpacity="0.88" />
+          <stop offset="100%" stopColor="#fff" stopOpacity="1" />
+        </linearGradient>
+        <mask id={`${uid}-mascara`}>
+          <rect x="0" y="0" width="200" height="200" fill={`url(#${uid}-fundido)`} />
+        </mask>
       </defs>
+
+      {/* Esfera */}
+      <circle cx="100" cy="100" r={R_BISEL} fill={`url(#${uid}-esfera)`} />
 
       {/* Bisel: circunferencia completa, muy tenue */}
       <circle
@@ -187,25 +212,29 @@ export function GaugeArc({
       ))}
 
       {/* Halo del progreso */}
-      <path
-        ref={glowRef}
-        fill="none"
-        stroke={color}
-        strokeWidth={17}
-        strokeLinecap="round"
-        filter={`url(#${uid}-blur)`}
-        opacity={0}
-      />
-      {/* Arco de progreso animado */}
-      <path
-        ref={progressRef}
-        fill="none"
-        stroke={color}
-        strokeWidth={9}
-        strokeLinecap="round"
-        opacity={0}
-      />
-      {/* Testigo del valor actual */}
+      <g mask={`url(#${uid}-mascara)`}>
+        <path
+          ref={glowRef}
+          fill="none"
+          stroke={color}
+          strokeWidth={17}
+          strokeLinecap="round"
+          filter={`url(#${uid}-blur)`}
+          opacity={0}
+        />
+        {/* Arco de progreso animado */}
+        <path
+          ref={progressRef}
+          fill="none"
+          stroke={color}
+          strokeWidth={9}
+          strokeLinecap="round"
+          opacity={0}
+        />
+      </g>
+
+      {/* Testigo del valor actual. Va fuera del fundido: marca dónde está la
+          aguja ahora mismo y tiene que verse igual de fuerte siempre. */}
       <line ref={marcaRef} stroke={color} strokeWidth={2.2} strokeLinecap="round" opacity={0} />
 
       {/* Marcas menores */}

@@ -59,11 +59,11 @@ export default function AiPage() {
 
   return (
     <div className="flex h-full flex-col gap-4 p-6">
-      <h1 className="text-xl font-thin tracking-[0.2em] text-silver">ASISTENTE</h1>
+      <h1 className="text-xl font-medium tracking-[0.2em] text-silver">ASISTENTE</h1>
 
       {/* Contexto actual */}
       <div className="flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-widest text-muted">
-        <span className="rounded-full bg-white/5 px-3 py-1">
+        <span className="rounded-full bg-linea/5 px-3 py-1">
           {dtc.length === 0 ? "Sin averías activas" : `${dtc.length} DTC activos`}
         </span>
         {dtc.map((d) => (
@@ -95,7 +95,7 @@ export default function AiPage() {
                 className={`max-w-[80%] whitespace-pre-wrap rounded-2xl px-4 py-3 text-sm leading-relaxed ${
                   m.role === "user"
                     ? "self-end bg-accent/15 text-silver"
-                    : "self-start border border-white/10 bg-white/[0.04] text-silver/95"
+                    : "self-start border border-linea/10 bg-linea/[0.04] text-silver/95"
                 }`}
               >
                 {m.text}
@@ -108,7 +108,7 @@ export default function AiPage() {
             ))
           )}
           {busy ? (
-            <div className="self-start rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-muted">
+            <div className="self-start rounded-2xl border border-linea/10 bg-linea/[0.04] px-4 py-3 text-sm text-muted">
               Pensando…
             </div>
           ) : null}

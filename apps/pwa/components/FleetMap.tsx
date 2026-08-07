@@ -64,7 +64,7 @@ export function FleetMap({ points, height = 340, onSelect }: FleetMapProps) {
   if (points.length === 0) {
     return (
       <div
-        className="flex items-center justify-center rounded-2xl border border-white/10 bg-white/[0.02] text-sm text-muted"
+        className="flex items-center justify-center rounded-2xl border border-linea/10 bg-linea/[0.02] text-sm text-muted"
         style={{ height }}
       >
         Ningún vehículo ha reportado posición todavía.
@@ -74,7 +74,7 @@ export function FleetMap({ points, height = 340, onSelect }: FleetMapProps) {
 
   return (
     <div
-      className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.02]"
+      className="relative overflow-hidden rounded-2xl border border-linea/10 bg-linea/[0.02]"
       style={{ height }}
     >
       <svg

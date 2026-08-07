@@ -12,7 +12,7 @@
  *
  * Anima por refs con requestAnimationFrame, sin re-render por fotograma.
  */
-import { useRef } from "react";
+import { useId, useRef } from "react";
 import { clamp, useAnimatedNumber } from "./animation";
 import { alfa, MBUX } from "./theme";
 
@@ -59,6 +59,7 @@ export function MetricInline({
   icon,
   size = 64,
 }: MetricInlineProps) {
+  const uid = useId();
   const numeroRef = useRef<HTMLSpanElement>(null);
   const arcoRef = useRef<SVGCircleElement>(null);
 
@@ -79,6 +80,19 @@ export function MetricInline({
       <div className="relative shrink-0" style={{ width: size, height: size }}>
         {/* El arco se gira para que el hueco quede abajo y centrado. */}
         <svg viewBox="0 0 100 100" className="h-full w-full" style={{ rotate: "125deg" }}>
+          <defs>
+            {/* El mismo fundido que los relojes grandes, para que las cinco
+                magnitudes se lean como parte del mismo instrumento y no como
+                cinco adornos sueltos. Va en máscara y no en el trazo porque el
+                color cambia a rojo al cruzar el umbral. */}
+            <linearGradient id={`${uid}-fundido`} x1="0.05" y1="0.95" x2="0.95" y2="0.15">
+              <stop offset="0%" stopColor="#fff" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#fff" stopOpacity="1" />
+            </linearGradient>
+            <mask id={`${uid}-mascara`}>
+              <rect x="0" y="0" width="100" height="100" fill={`url(#${uid}-fundido)`} />
+            </mask>
+          </defs>
           <circle
             cx="50"
             cy="50"
@@ -90,6 +104,7 @@ export function MetricInline({
             strokeDasharray={`${LARGO} ${CIRCUNFERENCIA}`}
           />
           <circle
+            mask={`url(#${uid}-mascara)`}
             ref={arcoRef}
             cx="50"
             cy="50"

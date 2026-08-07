@@ -70,7 +70,7 @@ export default function SettingsPage() {
 
   return (
     <div className="flex flex-col gap-5 p-6">
-      <h1 className="text-xl font-thin tracking-[0.2em] text-silver">AJUSTES</h1>
+      <h1 className="text-xl font-medium tracking-[0.2em] text-silver">AJUSTES</h1>
 
       {/* Fuente de datos */}
       <Card title="Fuente de datos del vehículo">
@@ -86,8 +86,8 @@ export default function SettingsPage() {
                   active
                     ? "border-accent/60 bg-accent/10"
                     : p.available
-                      ? "border-white/10 bg-white/[0.03] hover:border-accent/30"
-                      : "cursor-not-allowed border-white/5 bg-white/[0.02] opacity-50"
+                      ? "border-linea/10 bg-linea/[0.03] hover:border-accent/30"
+                      : "cursor-not-allowed border-linea/5 bg-linea/[0.02] opacity-50"
                 }`}
               >
                 <div className="flex items-center justify-between">
@@ -95,7 +95,7 @@ export default function SettingsPage() {
                     {p.name}
                   </span>
                   {!p.available ? (
-                    <span className="rounded-full bg-white/10 px-2 py-0.5 text-[9px] uppercase tracking-widest text-muted">
+                    <span className="rounded-full bg-linea/10 px-2 py-0.5 text-[9px] uppercase tracking-widest text-muted">
                       Próximamente
                     </span>
                   ) : active ? (
@@ -134,7 +134,7 @@ export default function SettingsPage() {
                       className={`rounded-xl border px-4 py-2.5 text-left transition-colors ${
                         active
                           ? "border-accent/60 bg-accent/10"
-                          : "border-white/10 bg-white/[0.03] hover:border-accent/30"
+                          : "border-linea/10 bg-linea/[0.03] hover:border-accent/30"
                       }`}
                     >
                       <span className={`text-sm ${active ? "text-accent" : "text-silver"}`}>
@@ -219,7 +219,7 @@ export default function SettingsPage() {
             />
           </div>
 
-          <div className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3">
+          <div className="flex items-center justify-between rounded-xl border border-linea/10 bg-linea/[0.03] px-4 py-3">
             <div>
               <p className="text-sm text-silver">Enviar telemetría al backend</p>
               <p className="text-xs text-muted">
@@ -232,7 +232,7 @@ export default function SettingsPage() {
               aria-checked={telemetryEnabled}
               onClick={() => setTelemetryEnabled(!telemetryEnabled)}
               className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
-                telemetryEnabled ? "bg-accent/70" : "bg-white/15"
+                telemetryEnabled ? "bg-accent/70" : "bg-linea/15"
               }`}
             >
               <span
@@ -255,7 +255,7 @@ export default function SettingsPage() {
           href="https://sketchfab.com/3d-models/2003-mercedes-benz-clk-55-amg-96c1c8f27333453db1cde651bc089708"
           target="_blank"
           rel="noreferrer"
-          className="text-silver underline decoration-white/20 underline-offset-2 hover:text-accent"
+          className="text-silver underline decoration-linea/30 underline-offset-2 hover:text-accent"
         >
           «2003 Mercedes-Benz CLK 55 AMG»
         </a>{" "}
@@ -265,7 +265,7 @@ export default function SettingsPage() {
           href="https://creativecommons.org/licenses/by-nc-sa/4.0/"
           target="_blank"
           rel="noreferrer"
-          className="text-silver underline decoration-white/20 underline-offset-2 hover:text-accent"
+          className="text-silver underline decoration-linea/30 underline-offset-2 hover:text-accent"
         >
           CC BY-NC-SA 4.0
         </a>

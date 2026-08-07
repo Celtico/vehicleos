@@ -56,7 +56,7 @@ export default function TripsPage() {
   return (
     <div className="flex flex-col gap-5 p-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-thin tracking-[0.2em] text-silver">VIAJES</h1>
+        <h1 className="text-xl font-medium tracking-[0.2em] text-silver">VIAJES</h1>
         {isError ? (
           <span className="rounded-full bg-warn/15 px-3 py-1 text-[10px] uppercase tracking-widest text-warn">
             Backend no disponible · datos locales
@@ -83,19 +83,19 @@ export default function TripsPage() {
                 </div>
                 <div className="grid grid-cols-4 gap-3 text-center">
                   <div>
-                    <p className="text-2xl font-thin text-accent">
+                    <p className="text-2xl font-medium text-accent">
                       {trip.distanceKm.toFixed(1)}
                     </p>
                     <p className="text-[10px] uppercase tracking-widest text-muted">km</p>
                   </div>
                   <div>
-                    <p className="text-2xl font-thin text-silver">
+                    <p className="text-2xl font-medium text-silver">
                       {trip.avgConsumption.toFixed(1)}
                     </p>
                     <p className="text-[10px] uppercase tracking-widest text-muted">L/100km</p>
                   </div>
                   <div>
-                    <p className="text-2xl font-thin text-silver">
+                    <p className="text-2xl font-medium text-silver">
                       {Math.round(trip.avgSpeed)}
                     </p>
                     <p className="text-[10px] uppercase tracking-widest text-muted">
@@ -103,7 +103,7 @@ export default function TripsPage() {
                     </p>
                   </div>
                   <div>
-                    <p className="text-2xl font-thin text-silver">
+                    <p className="text-2xl font-medium text-silver">
                       {Math.round(trip.maxSpeed)}
                     </p>
                     <p className="text-[10px] uppercase tracking-widest text-muted">km/h máx</p>

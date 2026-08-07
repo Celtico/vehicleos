@@ -21,10 +21,10 @@ export default function MaintenancePage() {
   return (
     <div className="flex flex-col gap-5 p-6">
       <div className="flex items-baseline justify-between">
-        <h1 className="text-xl font-thin tracking-[0.2em] text-silver">MANTENIMIENTO</h1>
+        <h1 className="text-xl font-medium tracking-[0.2em] text-silver">MANTENIMIENTO</h1>
         <span className="text-sm text-muted">
           Odómetro:{" "}
-          <span className="text-lg font-thin text-silver">
+          <span className="text-lg font-medium text-silver">
             {Math.round(odometer).toLocaleString("es-ES")}
           </span>{" "}
           km
@@ -51,7 +51,7 @@ export default function MaintenancePage() {
                 </div>
 
                 {/* Barra de progreso del intervalo */}
-                <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+                <div className="h-1.5 w-full overflow-hidden rounded-full bg-linea/10">
                   <div
                     className="h-full rounded-full transition-all duration-700"
                     style={{

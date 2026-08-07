@@ -27,6 +27,15 @@
   --c-danger: 255 77 90;
   --c-ok: 56 224 125;
   --c-track: 27 37 41;
+  /* Esfera de los relojes: el cristal recibe la luz por arriba a la
+     izquierda, igual que el resto del cockpit. Sin esto el reloj es un
+     círculo plano y no parece un instrumento. */
+  --c-esfera-0: #101a1f;
+  --c-esfera-1: #080d10;
+  --c-esfera-2: #05090b;
+  /* Realce superior de los paneles: apenas un velo. */
+  --c-panel-luz: 255 255 255;
+  --c-panel-luz-a: 0.03;
   --c-fondo-degradado: radial-gradient(
     120% 90% at 30% -10%,
     #0d181d 0%,
@@ -64,6 +73,11 @@
   --c-danger: 200 16 46;
   --c-ok: 18 122 68;
   --c-track: 205 214 217;
+  --c-esfera-0: #ffffff;
+  --c-esfera-1: #f5f8f9;
+  --c-esfera-2: #e9eef0;
+  --c-panel-luz: 255 255 255;
+  --c-panel-luz-a: 0.6;
   --c-fondo-degradado: radial-gradient(
     120% 90% at 30% -10%,
     #ffffff 0%,
@@ -102,10 +116,37 @@ body {
     color 900ms ease;
 }
 
-/* Superficies del cockpit, que siguen al tema. */
+/*
+ * Superficies del cockpit, que siguen al tema.
+ *
+ * El velo de arriba es lo que separa una superficie de un rectángulo pintado:
+ * insinúa que la luz cae desde arriba, como en los relojes y en el fondo. Es
+ * deliberadamente flojo; a más carga se convierte en un botón de 2010.
+ */
 .panel-cockpit {
-  background: rgb(var(--c-panel) / var(--c-panel-a));
+  background:
+    linear-gradient(to bottom, rgb(var(--c-panel-luz) / var(--c-panel-luz-a)), transparent 62%),
+    rgb(var(--c-panel) / var(--c-panel-a));
   border: 1px solid rgb(var(--c-border) / var(--c-border-a));
+}
+
+/*
+ * Filete separador que se desvanece por los extremos.
+ *
+ * Una línea de borde a borde corta la composición en cajas; ésta solo marca
+ * la separación donde hace falta, en el centro, y se difumina antes de tocar
+ * nada. Se usa en la franja del viaje.
+ */
+.filete-suave {
+  border: 0;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgb(var(--c-border) / 0.28) 22%,
+    rgb(var(--c-border) / 0.28) 78%,
+    transparent
+  );
+  width: 1px;
 }
 
 /* Barra de scroll discreta acorde al tema. */

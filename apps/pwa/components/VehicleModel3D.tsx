@@ -1318,7 +1318,7 @@ export function VehicleModel3D({
           <span className="text-[10px] uppercase tracking-[0.25em] text-muted">
             Cargando modelo 3D
           </span>
-          <div className="h-[3px] w-40 overflow-hidden rounded-full bg-white/10">
+          <div className="h-[3px] w-40 overflow-hidden rounded-full bg-linea/10">
             <div
               className="h-full rounded-full bg-accent transition-[width] duration-200"
               style={{ width: `${progreso}%` }}

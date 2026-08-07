@@ -174,12 +174,12 @@ export default function PanelPage() {
               ? "border-danger/50"
               : g === "warning"
                 ? "border-warning/40"
-                : "border-white/10";
+                : "border-linea/10";
           return (
             <button
               key={v.id}
               onClick={() => setSeleccionado(v.id === seleccionado ? null : v.id)}
-              className={`rounded-2xl border ${borde} bg-white/[0.03] p-4 text-left transition-colors hover:border-accent/40 ${
+              className={`rounded-2xl border ${borde} bg-linea/[0.03] p-4 text-left transition-colors hover:border-accent/40 ${
                 v.id === seleccionado ? "ring-1 ring-accent/40" : ""
               }`}
             >
@@ -264,7 +264,7 @@ export default function PanelPage() {
                 {viajes.data.slice(0, 6).map((t) => (
                   <li
                     key={t.id}
-                    className="flex items-baseline justify-between border-b border-white/5 pb-1.5 text-xs last:border-0"
+                    className="flex items-baseline justify-between border-b border-linea/5 pb-1.5 text-xs last:border-0"
                   >
                     <span className="text-muted">{fecha(t.startedAt)}</span>
                     <span className="text-silver">
@@ -289,7 +289,7 @@ export default function PanelPage() {
             {sinReconocer.map((a: VehicleAlert) => (
               <li
                 key={a.id}
-                className="flex items-center justify-between gap-4 rounded-xl border border-white/5 bg-white/[0.02] px-3 py-2"
+                className="flex items-center justify-between gap-4 rounded-xl border border-linea/5 bg-linea/[0.02] px-3 py-2"
               >
                 <div className="min-w-0">
                   <p
@@ -310,7 +310,7 @@ export default function PanelPage() {
                 <button
                   onClick={() => reconocer.mutate(a.id)}
                   disabled={reconocer.isPending}
-                  className="shrink-0 rounded-lg border border-white/10 px-3 py-1 text-[10px] uppercase tracking-widest text-muted transition-colors hover:border-accent/40 hover:text-accent disabled:opacity-40"
+                  className="shrink-0 rounded-lg border border-linea/10 px-3 py-1 text-[10px] uppercase tracking-widest text-muted transition-colors hover:border-accent/40 hover:text-accent disabled:opacity-40"
                 >
                   Reconocer
                 </button>
