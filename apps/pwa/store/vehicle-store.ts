@@ -78,6 +78,8 @@ export interface TelemetryHistory {
   boost: HistoryPoint[];
   voltage: HistoryPoint[];
   speed: HistoryPoint[];
+  /** Consumo instantáneo en L/h; con la velocidad da el consumo del viaje. */
+  fuelRate: HistoryPoint[];
 }
 
 export interface VehicleStore {
@@ -136,7 +138,7 @@ export const useVehicleStore = create<VehicleStore>((set, get) => ({
   telemetry: null,
   dtc: [],
   path: [],
-  history: { coolant: [], boost: [], voltage: [], speed: [] },
+  history: { coolant: [], boost: [], voltage: [], speed: [], fuelRate: [] },
   scenario: "city",
   engineOn: false,
   telemetryEnabled: false,
@@ -219,6 +221,7 @@ export const useVehicleStore = create<VehicleStore>((set, get) => ({
           boost: push(history.boost, t.turboPressure),
           voltage: push(history.voltage, t.batteryVoltage),
           speed: push(history.speed, t.speed),
+          fuelRate: push(history.fuelRate, t.fuelRate),
         };
       }
 
@@ -370,7 +373,10 @@ export const useVehicleStore = create<VehicleStore>((set, get) => ({
   },
 
   clearPath() {
-    set({ path: [], history: { coolant: [], boost: [], voltage: [], speed: [] } });
+    set({
+      path: [],
+      history: { coolant: [], boost: [], voltage: [], speed: [], fuelRate: [] },
+    });
   },
 }));
 

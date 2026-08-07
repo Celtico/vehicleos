@@ -26,7 +26,7 @@ const ITEMS: NavItem[] = [
     href: "/",
     label: "Cuadro",
     icon: (
-      <svg viewBox="0 0 24 24" className="h-6 w-6" {...stroke}>
+      <svg viewBox="0 0 24 24" className="h-5 w-5" {...stroke}>
         <path d="M4.5 17 a 8.5 8.5 0 1 1 15 0" />
         <line x1="12" y1="13.5" x2="15.5" y2="9" />
         <circle cx="12" cy="14" r="1.3" />
@@ -37,7 +37,7 @@ const ITEMS: NavItem[] = [
     href: "/diagnostics",
     label: "Diagnóstico",
     icon: (
-      <svg viewBox="0 0 24 24" className="h-6 w-6" {...stroke}>
+      <svg viewBox="0 0 24 24" className="h-5 w-5" {...stroke}>
         <path d="M12 3 2.8 19.5 h18.4 z" />
         <line x1="12" y1="9.5" x2="12" y2="14" />
         <circle cx="12" cy="16.8" r="0.4" />
@@ -48,7 +48,7 @@ const ITEMS: NavItem[] = [
     href: "/maintenance",
     label: "Mantenimiento",
     icon: (
-      <svg viewBox="0 0 24 24" className="h-6 w-6" {...stroke}>
+      <svg viewBox="0 0 24 24" className="h-5 w-5" {...stroke}>
         <path d="M14.5 6.5 a4.5 4.5 0 0 0 -6 5.6 L4 16.6 a1.8 1.8 0 0 0 2.5 2.5 l4.5 -4.5 a4.5 4.5 0 0 0 5.6 -6 l-2.8 2.8 -2.5 -0.7 -0.7 -2.5 z" />
       </svg>
     ),
@@ -57,7 +57,7 @@ const ITEMS: NavItem[] = [
     href: "/trips",
     label: "Viajes",
     icon: (
-      <svg viewBox="0 0 24 24" className="h-6 w-6" {...stroke}>
+      <svg viewBox="0 0 24 24" className="h-5 w-5" {...stroke}>
         <circle cx="6" cy="18" r="2" />
         <circle cx="18" cy="6" r="2" />
         <path
@@ -71,7 +71,7 @@ const ITEMS: NavItem[] = [
     href: "/map",
     label: "Mapa",
     icon: (
-      <svg viewBox="0 0 24 24" className="h-6 w-6" {...stroke}>
+      <svg viewBox="0 0 24 24" className="h-5 w-5" {...stroke}>
         <path d="M12 21 s-6.5 -6 -6.5 -11 a6.5 6.5 0 0 1 13 0 c0 5 -6.5 11 -6.5 11 z" />
         <circle cx="12" cy="10" r="2.2" />
       </svg>
@@ -81,7 +81,7 @@ const ITEMS: NavItem[] = [
     href: "/ai",
     label: "Asistente",
     icon: (
-      <svg viewBox="0 0 24 24" className="h-6 w-6" {...stroke}>
+      <svg viewBox="0 0 24 24" className="h-5 w-5" {...stroke}>
         <path d="M4 6 a2 2 0 0 1 2 -2 h12 a2 2 0 0 1 2 2 v8 a2 2 0 0 1 -2 2 h-9 l-4 4 v-4 h-1 a2 2 0 0 1 -2 -2 z" />
         <circle cx="9" cy="10" r="0.5" />
         <circle cx="12.5" cy="10" r="0.5" />
@@ -93,7 +93,7 @@ const ITEMS: NavItem[] = [
     href: "/panel",
     label: "Flota",
     icon: (
-      <svg viewBox="0 0 24 24" className="h-6 w-6" {...stroke}>
+      <svg viewBox="0 0 24 24" className="h-5 w-5" {...stroke}>
         <rect x="3" y="4" width="7.5" height="7" rx="1.5" />
         <rect x="13.5" y="4" width="7.5" height="7" rx="1.5" />
         <rect x="3" y="13" width="7.5" height="7" rx="1.5" />
@@ -105,7 +105,7 @@ const ITEMS: NavItem[] = [
     href: "/settings",
     label: "Ajustes",
     icon: (
-      <svg viewBox="0 0 24 24" className="h-6 w-6" {...stroke}>
+      <svg viewBox="0 0 24 24" className="h-5 w-5" {...stroke}>
         <circle cx="12" cy="12" r="3" />
         <path d="M12 4.5 v-2 M12 21.5 v-2 M19.5 12 h2 M2.5 12 h2 M17.3 6.7 l1.4 -1.4 M5.3 18.7 l1.4 -1.4 M17.3 17.3 l1.4 1.4 M5.3 5.3 l1.4 1.4" />
       </svg>
@@ -117,7 +117,7 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <nav className="flex h-full w-[86px] shrink-0 flex-col items-center gap-2 border-r border-white/5 bg-black/40 py-5">
+    <nav className="flex h-full w-[94px] shrink-0 flex-col items-center gap-0.5 border-r border-white/5 bg-black/40 py-3">
       {/*
         Emblema propio de VehicleOS: arco de instrumento abierto (como los
         gauges del cuadro) con la "V" de Vehicle inscrita. Deliberadamente no
@@ -125,8 +125,8 @@ export function Sidebar() {
         Mercedes de esta interfaz es estética (tipografía fina, negro con
         acentos turquesa), nunca de marca.
       */}
-      <Link href="/" className="mb-4" aria-label="VehicleOS">
-        <svg viewBox="0 0 32 32" className="h-9 w-9 text-accent">
+      <Link href="/" className="mb-1.5" aria-label="VehicleOS">
+        <svg viewBox="0 0 32 32" className="h-7 w-7 text-accent">
           <path
             d="M6.6 24.5 a13 13 0 1 1 18.8 0"
             fill="none"
@@ -165,7 +165,9 @@ export function Sidebar() {
             >
               {item.icon}
             </span>
-            <span className="text-[8.5px] uppercase tracking-[0.15em]">{item.label}</span>
+            <span className="max-w-full px-1 text-center text-[8.5px] uppercase leading-tight tracking-[0.08em]">
+              {item.label}
+            </span>
           </Link>
         );
       })}

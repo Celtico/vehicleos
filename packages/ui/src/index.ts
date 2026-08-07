@@ -34,3 +34,6 @@ export {
   type PartSeverity,
 } from "./VehicleModel";
 export { WheelBadge, type WheelBadgeProps } from "./WheelBadge";
+export { MetricCard, type MetricCardProps } from "./MetricCard";
+export { FaultPanel, type FaultPanelProps, type FaultItem } from "./FaultPanel";
+export { InfoList, type InfoListProps, type InfoRow } from "./InfoList";
