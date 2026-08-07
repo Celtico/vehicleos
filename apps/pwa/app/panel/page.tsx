@@ -339,7 +339,7 @@ function Metric({
   return (
     <div>
       <p className="text-lg font-light text-silver">{valor.toFixed(decimales)}</p>
-      <p className="text-[9px] uppercase tracking-wider text-muted">{unidad}</p>
+      <p className="text-[10px] uppercase tracking-wider text-muted">{unidad}</p>
     </div>
   );
 }

@@ -43,9 +43,17 @@ const VISTAS: { id: CarView; etiqueta: string }[] = [
   { id: "3d", etiqueta: "3D" },
 ];
 
-/** Temperatura a la que el vano motor empieza a teñirse. */
-const TEMP_FRIA = 70;
-const TEMP_CALIENTE = 115;
+/**
+ * Franja de temperatura en la que se tiñe el vano motor.
+ *
+ * Arranca en 100 °C y no en 70: un OM612 trabaja entre 85 y 95 °C, así que
+ * empezar a los 70 pintaba el capó de ámbar con el motor simplemente en
+ * temperatura de servicio. El tinte tiene que decir "esto no es normal", y
+ * lo anormal empieza cerca del umbral de aviso por sobrecalentamiento
+ * (105 °C, el mismo que usan las reglas del backend).
+ */
+const TEMP_FRIA = 100;
+const TEMP_CALIENTE = 118;
 
 /**
  * Velocidad del limitador. De momento es un aviso fijo y no un ajuste: el
@@ -153,7 +161,7 @@ export default function DashboardPage() {
       : `0:${String(viaje.minutos).padStart(2, "0")}`;
 
   return (
-    <div className="flex h-full flex-col gap-2 px-4 pb-1 pt-1">
+    <div className="flex h-full flex-col gap-2 px-4 pb-1 pt-4">
       {/* ── Fila principal: velocidad · coche · régimen ───────── */}
       <div className="flex min-h-0 flex-1 items-stretch gap-2">
         {/* Velocímetro, con el limitador debajo */}
@@ -182,6 +190,7 @@ export default function DashboardPage() {
               value={t?.coolantTemp ?? 0}
               unit="°C"
               max={130}
+              warn={100}
               danger={105}
               icon={
                 <svg viewBox="0 0 24 24" className="h-[30px] w-[30px]" {...trazo}>
@@ -205,6 +214,7 @@ export default function DashboardPage() {
               value={t?.fuelLevel ?? 0}
               unit="%"
               max={100}
+              warnBelow={15}
               dangerBelow={10}
               icon={
                 <svg viewBox="0 0 24 24" className="h-[30px] w-[30px]" {...trazo}>
@@ -218,6 +228,7 @@ export default function DashboardPage() {
               unit="V"
               min={8}
               max={16}
+              warnBelow={12.2}
               dangerBelow={11.8}
               decimals={1}
               icon={
@@ -258,7 +269,7 @@ export default function DashboardPage() {
                     key={v.id}
                     onClick={() => setCarView(v.id)}
                     aria-pressed={activa}
-                    className={`rounded-full px-2.5 py-1 text-[9.5px] font-semibold uppercase tracking-[0.14em] transition-colors ${
+                    className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] transition-colors ${
                       activa ? "bg-accent/15 text-accent" : "text-muted hover:text-silver"
                     }`}
                   >
@@ -326,7 +337,7 @@ export default function DashboardPage() {
       {/* ── Fila inferior: averías · testigos · viaje ─────────── */}
       {/* El coche no se repite aquí: el de arriba ya resalta la pieza
           averiada, y dibujarlo dos veces era enseñar lo mismo dos veces. */}
-      <div className="grid h-[176px] shrink-0 grid-cols-[1.2fr_1.35fr_1.55fr] gap-6">
+      <div className="grid h-[142px] shrink-0 grid-cols-[1.2fr_1.35fr_1.55fr] gap-6">
         <FaultPanel
           plain
           faults={faults}
@@ -337,10 +348,10 @@ export default function DashboardPage() {
         {/* Los tres bloques arrancan con rótulo a la misma altura. Sin él,
             la fila se leía como una cosa etiquetada y dos flotando. */}
         <div className="flex flex-col px-1">
-          <span className="mb-3 text-[11.5px] font-semibold uppercase tracking-[0.1em] text-muted">
+          <span className="mb-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-muted">
             Sistemas
           </span>
-          <div className="flex flex-1 items-center justify-around">
+          <div className="flex items-start justify-around">
             <StatusLight kind="abs" status={t?.systems.abs ?? "unknown"} />
             <StatusLight kind="esp" status={t?.systems.esp ?? "unknown"} />
             <StatusLight kind="airbag" status={t?.systems.airbag ?? "unknown"} />
@@ -349,10 +360,10 @@ export default function DashboardPage() {
         </div>
 
         <div className="flex flex-col px-1">
-          <span className="mb-3 text-[11.5px] font-semibold uppercase tracking-[0.1em] text-muted">
+          <span className="mb-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-muted">
             Viaje actual
           </span>
-          <div className="grid flex-1 grid-cols-4 items-center">
+          <div className="grid grid-cols-4 items-start">
             {[
               {
                 l: "Distancia",
@@ -401,7 +412,7 @@ export default function DashboardPage() {
                   {d.l}
                 </span>
                 <span className="flex items-baseline gap-1">
-                  <span className="text-[22px] font-semibold leading-tight tabular-nums text-silver">
+                  <span className="text-xl font-semibold leading-tight tabular-nums text-silver">
                     {d.v}
                   </span>
                   <span className="text-[10px] text-muted">{d.u}</span>

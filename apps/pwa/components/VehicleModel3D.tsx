@@ -90,10 +90,22 @@ const ELEVACION = THREE.MathUtils.degToRad(14);
 /** Margen alrededor del coche al calcular la distancia de cámara. */
 const MARGEN_ENCUADRE = 1.1;
 
-/** Vista inicial: tres cuartos delantero por el lado del conductor. */
-const GIRO_INICIAL = -0.62;
-/** Velocidad de la rotación automática (rad/s). */
-const VELOCIDAD_GIRO = 0.18;
+/**
+ * Vista de reposo: tres cuartos largo por el lado del conductor, la misma
+ * pose del boceto. Más de frente el coche se encoge en un lienzo que es casi
+ * tres veces más ancho que alto y deja medio hueco vacío a cada lado.
+ */
+const GIRO_INICIAL = -0.95;
+/**
+ * Velocidad de la rotación automática (rad/s).
+ *
+ * Está a cero a propósito. Un coche dando vueltas solo es un adorno en
+ * movimiento en mitad de una pantalla que se mira conduciendo, obliga a
+ * repintar sin parar en una tablet que no va sobrada, y hace que la vista
+ * casi nunca esté en la pose buena. El conductor puede girarlo arrastrando
+ * cuando quiera mirar una pieza concreta.
+ */
+const VELOCIDAD_GIRO = 0;
 
 /** Nombre legible de cada pieza (para el `aria-label`). */
 const ETIQUETAS: Record<VehiclePartId, string> = {
@@ -173,6 +185,15 @@ const FUERZA_GRAVEDAD: Record<PartSeverity, number> = {
   warning: 0.8,
   error: 0.92,
 };
+
+/**
+ * Calor (0-100) por debajo del cual el capó no se tiñe. Un motor por debajo
+ * de la temperatura de servicio no es una anomalía: no hay nada que señalar.
+ */
+const UMBRAL_CALOR = 12;
+
+/** Color neutro para apagar un tinte sin reservar un objeto por frame. */
+const NEGRO = new THREE.Color(0x000000);
 
 /** Intensidad del halo emissive que se suma al repintado. */
 const INTENSIDAD_GRAVEDAD: Record<PartSeverity, number> = {
@@ -592,7 +613,11 @@ export function VehicleModel3D({
     renderer.setClearAlpha(0);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.45;
+    // Exposición: con 1,45 sobre un HDRI de estudio ya fuerte, el cromo de las
+    // llantas y la tapicería clara saturaban a blanco puro y perdían todo el
+    // detalle, mientras la pintura oscura seguía hundida en el fondo. Bajarla
+    // recupera el dibujo de la llanta y del habitáculo.
+    renderer.toneMappingExposure = 1.0;
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(FOV, 1, 0.1, 100);
@@ -634,22 +659,27 @@ export function VehicleModel3D({
     const hdri = crearEntornoEstudio();
     const entorno = pmrem.fromEquirectangular(hdri).texture;
     scene.environment = entorno;
-    scene.environmentIntensity = 1.5;
+    scene.environmentIntensity = 1.1;
     hdri.dispose();
 
     /* --- Luces ---------------------------------------------------------- */
-    const ambiental = new THREE.AmbientLight(0xdfeff2, 0.35);
+    const ambiental = new THREE.AmbientLight(0xdfeff2, 0.42);
     scene.add(ambiental);
 
-    const principal = new THREE.DirectionalLight(0xffffff, 2.2);
+    const principal = new THREE.DirectionalLight(0xffffff, 1.45);
     principal.position.set(4, 6, 5);
     scene.add(principal);
 
-    const relleno = new THREE.DirectionalLight(paleta.accent.clone(), 0.85);
+    // Relleno con el turquesa del cockpit, pero flojo. A 0,85 no era un
+    // reflejo del entorno: repintaba de verde todo el flanco de un coche que
+    // en el modelo es negro.
+    const relleno = new THREE.DirectionalLight(paleta.accent.clone(), 0.12);
     relleno.position.set(-5, 2.5, 3);
     scene.add(relleno);
 
-    const contra = new THREE.DirectionalLight(0xbfe6ff, 1.1);
+    // Contraluz: es lo único que despega una carrocería negra de un fondo
+    // negro, así que aquí se sube en lugar de bajar.
+    const contra = new THREE.DirectionalLight(0xbfe6ff, 1.45);
     contra.position.set(-1.5, 3, -6);
     scene.add(contra);
 
@@ -1169,12 +1199,20 @@ export function VehicleModel3D({
       // entonces manda la gravedad (rojo/ámbar), que es la información seria.
       const gravedadMotor = resaltadas.find(([p]) => p === "engine")?.[1];
       if (!gravedadMotor && meshesCapo.length > 0) {
-        colorDeCalor(colorTemporal, calorActual, paleta);
-        // Curva con exponente < 1: sobre chapa oscura un tinte lineal no se
-        // percibe hasta muy arriba, y el calor tiene que leerse antes de que
-        // el motor esté al rojo.
-        const t = Math.pow(THREE.MathUtils.clamp(calorActual, 0, 100) / 100, 0.7);
-        for (const mesh of meshesCapo) tenir(mesh, colorTemporal, 0.02 + t * 0.62);
+        // Por debajo del umbral el capó se deja en paz. El tinte es emissive,
+        // y sobre una pintura casi negra hasta un 0,02 de turquesa manda sobre
+        // el color propio: el coche salía verde botella con el motor frío, que
+        // además no es ninguna anomalía que haya que señalar.
+        if (calorActual < UMBRAL_CALOR) {
+          for (const mesh of meshesCapo) tenir(mesh, NEGRO, 0);
+        } else {
+          colorDeCalor(colorTemporal, calorActual, paleta);
+          // Curva con exponente < 1: sobre chapa oscura un tinte lineal no se
+          // percibe hasta muy arriba, y el calor tiene que leerse antes de que
+          // el motor esté al rojo.
+          const t = Math.pow((calorActual - UMBRAL_CALOR) / (100 - UMBRAL_CALOR), 0.7);
+          for (const mesh of meshesCapo) tenir(mesh, colorTemporal, t * 0.62);
+        }
       }
 
       // Pulso de las piezas en avería.

@@ -109,7 +109,7 @@ export function RingGauge({
         </div>
       </div>
 
-      <span className="text-center text-[10.5px] font-semibold uppercase leading-tight tracking-[0.06em] text-muted">
+      <span className="text-center text-[10px] font-semibold uppercase leading-tight tracking-[0.06em] text-muted">
         {label}
       </span>
     </div>

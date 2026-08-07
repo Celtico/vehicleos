@@ -49,13 +49,13 @@ export default function MaintenancePage() {
             >
               <div className="flex items-start justify-between gap-2">
                 <span className="min-w-0">
-                  <span className="block truncate text-[13.5px] font-medium text-silver">
+                  <span className="block truncate text-[13px] font-medium text-silver">
                     {item.name}
                   </span>
                   <span className="block truncate text-[11px] text-muted">{item.detail}</span>
                 </span>
                 <span
-                  className="shrink-0 rounded-full px-2 py-0.5 text-[9.5px] font-semibold uppercase tracking-[0.1em]"
+                  className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em]"
                   style={{
                     color: info.color,
                     background: `color-mix(in srgb, ${info.color} 16%, transparent)`,
@@ -76,7 +76,7 @@ export default function MaintenancePage() {
                 />
               </div>
 
-              <div className="flex items-baseline justify-between gap-2 text-[10.5px] text-muted">
+              <div className="flex items-baseline justify-between gap-2 text-[10px] text-muted">
                 <span className="truncate">Cada {km(item.intervalKm)} km</span>
                 <span className="shrink-0 font-semibold" style={{ color: info.color }}>
                   quedan {km(item.remainingKm)} km

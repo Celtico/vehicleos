@@ -57,7 +57,7 @@ export function MetricCard({
   return (
     <div className="flex flex-col justify-between panel-cockpit rounded-2xl px-4 py-3">
       <div className="flex items-center justify-between">
-        <span className="text-[11.5px] font-semibold uppercase tracking-[0.1em] text-accent">
+        <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-accent">
           {label}
         </span>
         {icon ? <span className="text-muted">{icon}</span> : null}
@@ -93,7 +93,7 @@ export function MetricCard({
             style={{ width: 0, background: MBUX.accent }}
           />
         </div>
-        <div className="mt-1 flex justify-between text-[10.5px] font-medium tabular-nums text-muted">
+        <div className="mt-1 flex justify-between text-[10px] font-medium tabular-nums text-muted">
           <span>{min}</span>
           <span>{max}</span>
         </div>

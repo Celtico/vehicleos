@@ -12,6 +12,7 @@ import { CockpitNotifications } from "../components/CockpitNotifications";
 import { DaylightMode } from "../components/DaylightMode";
 import { ThemeSwitch } from "../components/ThemeSwitch";
 import { ConnectionBadge } from "../components/ConnectionBadge";
+import { FaultBadge } from "../components/FaultBadge";
 import { Providers } from "../components/Providers";
 import { ServiceWorkerRegister } from "../components/ServiceWorkerRegister";
 import { BottomNav } from "../components/BottomNav";
@@ -54,12 +55,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   quede centrado de verdad y no se mueva cuando el reloj pasa
                   de "9:05" a "12:05". */}
               <header className="grid shrink-0 grid-cols-3 items-center px-4 py-2">
-                <span className="truncate text-[15px] font-semibold tracking-[0.01em] text-silver">
+                <span className="truncate text-base font-semibold tracking-[0.01em] text-silver">
                   Mercedes CLK 270 CDI
                   <span className="ml-2 text-[11px] font-normal text-muted">W209 · 2005</span>
                 </span>
-                <div className="flex justify-center">
+                <div className="flex items-center justify-center gap-4">
                   <ConnectionBadge />
+                  <FaultBadge />
                 </div>
                 <div className="flex items-center justify-end gap-5">
                   <ThemeSwitch />

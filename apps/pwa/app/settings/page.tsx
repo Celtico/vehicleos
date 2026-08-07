@@ -95,7 +95,7 @@ export default function SettingsPage() {
                     {p.name}
                   </span>
                   {!p.available ? (
-                    <span className="rounded-full bg-linea/10 px-2 py-0.5 text-[9px] uppercase tracking-widest text-muted">
+                    <span className="rounded-full bg-linea/10 px-2 py-0.5 text-[10px] uppercase tracking-widest text-muted">
                       Próximamente
                     </span>
                   ) : active ? (

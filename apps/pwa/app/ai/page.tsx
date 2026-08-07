@@ -100,7 +100,7 @@ export default function AiPage() {
               >
                 {m.text}
                 {m.role === "assistant" && m.local ? (
-                  <div className="mt-2 text-[9px] uppercase tracking-widest text-warn">
+                  <div className="mt-2 text-[10px] uppercase tracking-widest text-warn">
                     Respuesta local (backend no disponible)
                   </div>
                 ) : null}

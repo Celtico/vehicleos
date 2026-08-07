@@ -47,9 +47,9 @@ export function FaultPanel({
           : "panel-cockpit flex h-full flex-col rounded-2xl p-3"
       }
     >
-      <div className={`flex items-center justify-between ${plain ? "mb-3" : "mb-2"}`}>
+      <div className={`flex items-center justify-between ${plain ? "mb-2" : "mb-2"}`}>
         <span
-          className="truncate text-[11.5px] font-semibold uppercase tracking-[0.1em]"
+          className="truncate text-[11px] font-semibold uppercase tracking-[0.1em]"
           style={{ color: faults.length > 0 ? MBUX.danger : MBUX.muted }}
         >
           Averías activas
@@ -116,7 +116,7 @@ export function FaultPanel({
                     <span className="block font-mono text-sm font-semibold" style={{ color }}>
                       {f.code}
                     </span>
-                    <span className="block truncate text-[12.5px] font-medium text-muted">
+                    <span className="block truncate text-[13px] font-medium text-muted">
                       {f.title}
                     </span>
                   </span>

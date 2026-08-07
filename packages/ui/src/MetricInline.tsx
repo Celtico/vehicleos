@@ -34,6 +34,15 @@ export interface MetricInlineProps {
    * estaba casi vacío, exactamente al revés.
    */
   dangerBelow?: number;
+  /**
+   * Valor a partir del cual el arco pasa a ámbar, antes de llegar al rojo.
+   * Sin este escalón el indicador es binario: a 90 °C se ve igual de tranquilo
+   * que a 40 y de golpe salta a rojo a los 105, sin que el conductor haya
+   * podido verlo venir.
+   */
+  warn?: number;
+  /** Equivalente por abajo (combustible, tensión). */
+  warnBelow?: number;
   decimals?: number;
   /** Icono SVG inline, dentro del arco. */
   icon?: React.ReactNode;
@@ -47,6 +56,22 @@ const RADIO = 44;
 const CIRCUNFERENCIA = 2 * Math.PI * RADIO;
 const LARGO = (BARRIDO / 360) * CIRCUNFERENCIA;
 
+/**
+ * Tramo de la pista que corresponde a un intervalo de valores, para pintar la
+ * zona de peligro sobre el propio arco. Sin la zona dibujada, el conductor no
+ * tiene forma de saber si 90 °C está cerca o lejos del límite.
+ */
+function tramo(
+  desde: number,
+  hasta: number,
+  min: number,
+  max: number,
+): { dash: string; offset: number } {
+  const a = clamp((desde - min) / (max - min), 0, 1);
+  const b = clamp((hasta - min) / (max - min), 0, 1);
+  return { dash: `${LARGO * Math.max(0, b - a)} ${CIRCUNFERENCIA}`, offset: -LARGO * a };
+}
+
 export function MetricInline({
   label,
   value,
@@ -55,6 +80,8 @@ export function MetricInline({
   max,
   danger,
   dangerBelow,
+  warn,
+  warnBelow,
   decimals = 0,
   icon,
   size = 64,
@@ -70,8 +97,13 @@ export function MetricInline({
       const rojo =
         (danger !== undefined && v >= danger) ||
         (dangerBelow !== undefined && v <= dangerBelow);
+      const ambar =
+        (warn !== undefined && v >= warn) || (warnBelow !== undefined && v <= warnBelow);
       arcoRef.current.setAttribute("stroke-dasharray", `${LARGO * t} ${CIRCUNFERENCIA}`);
-      arcoRef.current.setAttribute("stroke", rojo ? MBUX.danger : MBUX.accent);
+      arcoRef.current.setAttribute(
+        "stroke",
+        rojo ? MBUX.danger : ambar ? MBUX.warning : MBUX.accent,
+      );
     }
   });
 
@@ -103,6 +135,36 @@ export function MetricInline({
             strokeLinecap="round"
             strokeDasharray={`${LARGO} ${CIRCUNFERENCIA}`}
           />
+
+          {/* Zonas de aviso y peligro, sobre la propia pista */}
+          {[
+            warn !== undefined
+              ? { d: tramo(warn, danger ?? max, min, max), c: MBUX.warning }
+              : null,
+            warnBelow !== undefined
+              ? { d: tramo(dangerBelow ?? min, warnBelow, min, max), c: MBUX.warning }
+              : null,
+            danger !== undefined ? { d: tramo(danger, max, min, max), c: MBUX.danger } : null,
+            dangerBelow !== undefined
+              ? { d: tramo(min, dangerBelow, min, max), c: MBUX.danger }
+              : null,
+          ]
+            .filter((z) => z !== null)
+            .map((z, i) => (
+              <circle
+                key={i}
+                cx="50"
+                cy="50"
+                r={RADIO}
+                fill="none"
+                stroke={z.c}
+                strokeWidth="7"
+                strokeDasharray={z.d.dash}
+                strokeDashoffset={z.d.offset}
+                opacity={0.3}
+              />
+            ))}
+
           <circle
             mask={`url(#${uid}-mascara)`}
             ref={arcoRef}
