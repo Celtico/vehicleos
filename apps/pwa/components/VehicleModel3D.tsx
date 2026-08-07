@@ -604,6 +604,23 @@ export function VehicleModel3D({
       danger: new THREE.Color(),
       ok: new THREE.Color(),
     };
+    /** ¿Manda el tema claro? Lo dice el atributo que pone DaylightMode. */
+    const esDeDia = (): boolean => document.documentElement.dataset.tema === "dia";
+
+    /**
+     * Ajusta suelo y halo al tema.
+     *
+     * Sobre fondo claro un halo cian aditivo no ilumina nada y la sombra al
+     * 62 % se convierte en una mancha gris que, al recortarse contra el borde
+     * del lienzo, se ve como un rectángulo pegado en mitad del cuadro. De día
+     * el halo se apaga y la sombra se aprieta y se aclara.
+     */
+    const ajustarSueloAlTema = (): void => {
+      const dia = esDeDia();
+      materialHalo.visible = !dia;
+      materialSombra.opacity = dia ? 0.3 : 0.62;
+    };
+
     const refrescarPaleta = (): void => {
       for (const clave of Object.keys(paleta) as ClaveTema[]) {
         resolverColorTema(clave, paleta[clave]);
@@ -930,7 +947,8 @@ export function VehicleModel3D({
         sombra.scale.set(tamCoche.x * 2.1, tamCoche.z * 1.14, 1);
         sombra.position.y = 0.004;
         sombra.visible = true;
-        halo.scale.set(tamCoche.x * 4.2, tamCoche.z * 1.5, 1);
+        halo.scale.set(tamCoche.x * 3, tamCoche.z * 1.25, 1);
+        ajustarSueloAlTema();
         halo.visible = true;
 
         // 4) Clasificación de las ruedas POR POSICIÓN (ver cabecera).
@@ -1228,6 +1246,7 @@ export function VehicleModel3D({
       refrescarPaleta();
       relleno.color.copy(paleta.accent);
       materialHalo.color.copy(paleta.accent);
+      ajustarSueloAlTema();
       const actuales = new Map(resaltadas);
       apiRef.current?.aplicarPiezas(Object.fromEntries(actuales));
       pedirRender();

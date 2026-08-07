@@ -82,7 +82,7 @@ export function FaultPanel({
           </span>
         </div>
       ) : (
-        <ul className="flex flex-1 flex-col gap-1.5">
+        <ul className={`flex flex-col gap-1.5 ${plain ? "" : "flex-1"}`}>
           {visibles.map((f) => {
             const token = f.severity === "error" ? "danger" : "warning";
             const color = f.severity === "error" ? MBUX.danger : MBUX.warning;
@@ -120,6 +120,22 @@ export function FaultPanel({
                       {f.title}
                     </span>
                   </span>
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    className="shrink-0 text-muted"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="m9.5 5.5 7 6.5-7 6.5"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
                 </button>
               </li>
             );
@@ -130,11 +146,24 @@ export function FaultPanel({
       {faults.length > 0 && onSeeAll ? (
         <button
           onClick={onSeeAll}
-          className={`mt-auto text-[11px] font-semibold uppercase tracking-[0.1em] text-muted transition-colors hover:text-accent ${
-            plain ? "text-left" : "w-full rounded-xl border border-linea/20 py-1.5"
+          className={`text-[11px] font-semibold uppercase tracking-[0.1em] text-muted transition-colors hover:text-accent ${
+            plain
+              ? "mt-2 flex items-center gap-2 self-start"
+              : "mt-auto w-full rounded-xl border border-linea/20 py-1.5"
           }`}
         >
-          {restantes > 0 ? `Ver las ${faults.length}` : "Ver diagnóstico"}
+          <span>{restantes > 0 ? `Ver las ${faults.length}` : "Ver diagnóstico"}</span>
+          {plain ? (
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                d="M4.5 12h14m-5.5-5.5L18.5 12 13 17.5"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          ) : null}
         </button>
       ) : null}
     </div>

@@ -50,14 +50,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           >
             <div className="flex min-w-0 flex-1 flex-col">
               {/* Barra superior: identificación del coche y estado. */}
-              <header className="flex shrink-0 items-center justify-between px-4 py-2">
-                <span className="text-sm font-medium text-silver">
+              {/* Tres zonas de ancho igual para que el estado de la conexión
+                  quede centrado de verdad y no se mueva cuando el reloj pasa
+                  de "9:05" a "12:05". */}
+              <header className="grid shrink-0 grid-cols-3 items-center px-4 py-2">
+                <span className="truncate text-sm font-medium text-silver">
                   Mercedes CLK 270 CDI
                   <span className="ml-2 text-[11px] text-muted">W209 · 2005</span>
                 </span>
-                <div className="flex items-center gap-5">
-                  <ThemeSwitch />
+                <div className="flex justify-center">
                   <ConnectionBadge />
+                </div>
+                <div className="flex items-center justify-end gap-5">
+                  <ThemeSwitch />
                   <Clock />
                 </div>
               </header>
