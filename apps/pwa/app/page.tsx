@@ -7,21 +7,21 @@
  * del corte, porque nadie va a desplazarse conduciendo. Todo el contenido
  * cabe en el alto disponible, y por eso la disposición es densa.
  *
- * Reparto: velocidad y régimen a los lados, el coche al centro con sus
- * magnitudes encima, y abajo una fila con las averías activas, el estado
- * de los subsistemas y los datos del viaje.
+ * Reparto: velocidad y régimen grandes a los lados, cada uno con su dato
+ * asociado debajo (limitador y consumo); el coche al centro con las cinco
+ * magnitudes encima; y abajo las averías activas, el mapa del coche que
+ * dice dónde caen, los testigos y el viaje.
  *
  * Solo se muestran magnitudes que el coche entrega de verdad. Presión de
  * aceite, presión de neumáticos, marcha engranada o estado de puertas no
  * salen por el OBD-II de este vehículo, y una pantalla de diagnóstico que
  * enseña números inventados es peor que una que no los enseña.
  */
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
   FaultPanel,
-  InfoList,
-  MetricCard,
+  MetricInline,
   RpmGauge,
   SpeedGauge,
   StatusLight,
@@ -30,12 +30,38 @@ import {
   type VehiclePartId,
 } from "@vehicleos/ui";
 import { DEFAULT_PROFILE } from "@vehicleos/shared";
-import { explainDtc, partsFromDtc, PART_LABELS } from "@vehicleos/ai";
-import { useVehicleStore, type HistoryPoint } from "../store/vehicle-store";
+import { explainDtc, partsFromDtc } from "@vehicleos/ai";
+import { VehicleModel3DLazy } from "../components/VehicleModel3DLazy";
+import { useVehicleStore, type CarView, type HistoryPoint } from "../store/vehicle-store";
+
+/** Alto reservado al vehículo en el centro del cuadro (cenital y 3D). */
+const ALTO_VEHICULO = 236;
+
+/** Opciones del conmutador de vista del coche. */
+const VISTAS: { id: CarView; etiqueta: string }[] = [
+  { id: "top", etiqueta: "Cenital" },
+  { id: "3d", etiqueta: "3D" },
+];
 
 /** Temperatura a la que el vano motor empieza a teñirse. */
 const TEMP_FRIA = 70;
 const TEMP_CALIENTE = 115;
+
+/**
+ * Velocidad del limitador. De momento es un aviso fijo y no un ajuste: el
+ * coche no tiene limitador que se pueda mandar por el OBD, así que esto es
+ * solo el umbral con el que la pantalla avisa.
+ */
+const LIMITADOR_KMH = 120;
+
+/** Trazo común de los iconos de las magnitudes. */
+const trazo = {
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: 1.6,
+  strokeLinecap: "round" as const,
+  strokeLinejoin: "round" as const,
+};
 
 /** Integra una serie de 1 Hz sobre el tiempo: Σ(valor · Δt) en horas. */
 function integrar(serie: HistoryPoint[]): number {
@@ -55,9 +81,14 @@ export default function DashboardPage() {
   const t = useVehicleStore((s) => s.telemetry);
   const dtc = useVehicleStore((s) => s.dtc);
   const history = useVehicleStore((s) => s.history);
-  const [piezaTocada, setPiezaTocada] = useState<VehiclePartId | null>(null);
-
+  const carView = useVehicleStore((s) => s.carView);
+  const setCarView = useVehicleStore((s) => s.setCarView);
   const parts = useMemo(() => partsFromDtc(dtc), [dtc]);
+
+  /** Tocar una pieza averiada abre su diagnóstico; una sana no hace nada. */
+  const abrirPieza = (pieza: VehiclePartId) => {
+    if ((parts[pieza] ?? "ok") !== "ok") router.push("/diagnostics");
+  };
 
   const engineHeat = t
     ? Math.max(
@@ -95,143 +126,263 @@ export default function DashboardPage() {
     const litrosRestantes = ((t?.fuelLevel ?? 0) / 100) * DEFAULT_PROFILE.tankLiters;
     const autonomia = consumo && consumo > 0 ? (litrosRestantes / consumo) * 100 : null;
 
-    return {
-      distancia: km,
-      consumo,
-      minutos,
-      autonomia,
-      litrosRestantes,
-    };
+    return { distancia: km, consumo, minutos, autonomia, litrosRestantes };
   }, [history.speed, history.fuelRate, t?.fuelLevel]);
 
-  const fmt = (v: number | null, dec: number, unidad: string) =>
-    v === null ? "—" : `${v.toFixed(dec)} ${unidad}`;
+  const fmt = (v: number | null, dec: number) => (v === null ? "—" : v.toFixed(dec));
+
+  const tiempo =
+    viaje.minutos >= 60
+      ? `${Math.floor(viaje.minutos / 60)}:${String(viaje.minutos % 60).padStart(2, "0")}`
+      : `0:${String(viaje.minutos).padStart(2, "0")}`;
 
   return (
-    <div className="flex h-full flex-col gap-2.5 p-3">
+    <div className="flex h-full flex-col gap-2 px-3 pb-1 pt-1">
       {/* ── Fila principal: velocidad · coche · régimen ───────── */}
-      <div className="flex min-h-0 flex-1 items-stretch gap-3">
-        <div className="flex shrink-0 items-center">
-          <SpeedGauge speed={t?.speed ?? 0} size={228} max={DEFAULT_PROFILE.maxSpeed} />
+      <div className="flex min-h-0 flex-1 items-stretch gap-2">
+        {/* Velocímetro, con el limitador debajo */}
+        <div className="flex shrink-0 flex-col items-center justify-center gap-1.5">
+          <SpeedGauge speed={t?.speed ?? 0} size={300} max={DEFAULT_PROFILE.maxSpeed} />
+          <div className="panel-cockpit flex items-center gap-2 rounded-xl px-3 py-1.5">
+            <svg viewBox="0 0 24 24" className="h-4 w-4 text-accent" {...trazo}>
+              <circle cx="12" cy="13.5" r="7" />
+              <path d="M12 10v3.5l2.2 1.2M9.5 3.5h5" />
+            </svg>
+            <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-accent">
+              Limitador
+            </span>
+            <span className="text-sm font-semibold tabular-nums text-silver">
+              {LIMITADOR_KMH}
+              <span className="ml-1 text-[10px] font-normal text-muted">km/h</span>
+            </span>
+          </div>
         </div>
 
-        <div className="flex min-w-0 flex-1 flex-col gap-2.5">
-          {/* Magnitudes que el coche sí entrega */}
-          <div className="grid shrink-0 grid-cols-4 gap-2.5">
-            <MetricCard
-              label="Refrigerante"
+        {/* Magnitudes y coche */}
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <div className="grid shrink-0 grid-cols-5 gap-3 px-1 pt-1">
+            <MetricInline
+              label="Temp. motor"
               value={t?.coolantTemp ?? 0}
               unit="°C"
               max={130}
               danger={105}
+              icon={
+                <svg viewBox="0 0 24 24" className="h-[30px] w-[30px]" {...trazo}>
+                  <path d="M10 13.5V5a2 2 0 1 1 4 0v8.5a4 4 0 1 1-4 0z" />
+                </svg>
+              }
             />
-            <MetricCard
+            <MetricInline
+              label="Carga motor"
+              value={t?.engineLoad ?? 0}
+              unit="%"
+              max={100}
+              icon={
+                <svg viewBox="0 0 24 24" className="h-[30px] w-[30px]" {...trazo}>
+                  <path d="M3 14.5v-3.2h1.9V9.1h2.4V6.8h4.6v2.3h2.3l2.3 2.2H21v4.6h-1.9v2.3h-2.4v-2.3h-6.1l-2.3 2.3H6v-2.3H3z" />
+                </svg>
+              }
+            />
+            <MetricInline
               label="Combustible"
               value={t?.fuelLevel ?? 0}
               unit="%"
               max={100}
               danger={10}
+              icon={
+                <svg viewBox="0 0 24 24" className="h-[30px] w-[30px]" {...trazo}>
+                  <path d="M5 20V5a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v15M3.5 20h11M13 10.5h3a2 2 0 0 1 2 2v3.5a1.5 1.5 0 0 0 3 0V9l-2.5-2.5" />
+                </svg>
+              }
             />
-            <MetricCard
+            <MetricInline
               label="Batería"
               value={t?.batteryVoltage ?? 0}
               unit="V"
               min={8}
               max={16}
               decimals={1}
+              icon={
+                <svg viewBox="0 0 24 24" className="h-[30px] w-[30px]" {...trazo}>
+                  <rect x="3" y="8" width="18" height="10" rx="2" />
+                  <path d="M7 5.5v2.5M17 5.5v2.5M6.5 13h3M13 13h3M14.5 11.5v3" />
+                </svg>
+              }
             />
-            <MetricCard
+            <MetricInline
               label="Turbo"
               value={t?.turboPressure ?? 0}
               unit="bar"
               max={DEFAULT_PROFILE.maxBoostBar ?? 1.4}
               decimals={2}
+              icon={
+                <svg viewBox="0 0 24 24" className="h-[30px] w-[30px]" {...trazo}>
+                  <circle cx="10.5" cy="13.5" r="5" />
+                  <path d="M10.5 13.5 15 9M15.5 5.5h3.5V9" />
+                </svg>
+              }
             />
           </div>
 
           {/* El coche, con la pieza averiada resaltada */}
-          <div className="flex min-h-0 flex-1 items-center justify-center">
-            <VehicleModel
-              size={196}
-              parts={parts}
-              engineHeat={engineHeat}
-              onPartClick={(p) => setPiezaTocada(p === piezaTocada ? null : p)}
-            />
+          <div className="relative flex min-h-0 flex-1 items-center justify-center">
+            {/* Conmutador de vista: discreto, arriba a la derecha, sin
+                robarle alto al coche (va superpuesto). */}
+            <div
+              role="group"
+              aria-label="Vista del vehículo"
+              className="panel-cockpit absolute right-0 top-0 z-10 flex items-center gap-0.5 rounded-full p-0.5"
+            >
+              {VISTAS.map((v) => {
+                const activa = v.id === carView;
+                return (
+                  <button
+                    key={v.id}
+                    onClick={() => setCarView(v.id)}
+                    aria-pressed={activa}
+                    className={`rounded-full px-2.5 py-1 text-[9.5px] font-semibold uppercase tracking-[0.14em] transition-colors ${
+                      activa ? "bg-accent/15 text-accent" : "text-muted hover:text-silver"
+                    }`}
+                  >
+                    {v.etiqueta}
+                  </button>
+                );
+              })}
+            </div>
+
+            {carView === "3d" ? (
+              <VehicleModel3DLazy
+                height={ALTO_VEHICULO}
+                parts={parts}
+                engineHeat={engineHeat}
+                onPartClick={abrirPieza}
+                fallback={
+                  <VehicleModel
+                    size={300}
+                    orientation="left"
+                    iconic
+                    parts={parts}
+                    engineHeat={engineHeat}
+                    onPartClick={abrirPieza}
+                  />
+                }
+              />
+            ) : (
+              <VehicleModel
+                size={300}
+                orientation="left"
+                iconic
+                parts={parts}
+                engineHeat={engineHeat}
+                onPartClick={abrirPieza}
+              />
+            )}
           </div>
         </div>
 
-        <div className="flex shrink-0 items-center">
+        {/* Cuentavueltas, con el consumo debajo */}
+        <div className="flex shrink-0 flex-col items-center justify-center gap-1.5">
           <RpmGauge
             rpm={t?.rpm ?? 0}
-            size={228}
+            size={300}
             max={DEFAULT_PROFILE.maxRpm}
             redline={DEFAULT_PROFILE.redlineRpm}
           />
+          <div className="panel-cockpit flex items-center gap-2 rounded-xl px-3 py-1.5">
+            <svg viewBox="0 0 24 24" className="h-4 w-4 text-accent" {...trazo}>
+              <path d="M5 20V5a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v15M3.5 20h11M13 10.5h3a2 2 0 0 1 2 2v3.5a1.5 1.5 0 0 0 3 0V9l-2.5-2.5" />
+            </svg>
+            <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-accent">
+              Consumo
+            </span>
+            <span className="text-sm font-semibold tabular-nums text-silver">
+              {fmt(viaje.consumo, 1)}
+              <span className="ml-1 text-[10px] font-normal text-muted">L/100km</span>
+            </span>
+          </div>
         </div>
       </div>
 
-      {/* ── Fila inferior: averías · estado · viaje ───────────── */}
-      <div className="grid h-[188px] shrink-0 grid-cols-3 gap-3">
+      {/* ── Fila inferior: averías · testigos · viaje ─────────── */}
+      {/* El coche no se repite aquí: el de arriba ya resalta la pieza
+          averiada, y dibujarlo dos veces era enseñar lo mismo dos veces. */}
+      <div className="grid h-[176px] shrink-0 grid-cols-[1.2fr_1.35fr_1.55fr] gap-6">
         <FaultPanel
+          plain
           faults={faults}
           onSelect={() => router.push("/diagnostics")}
           onSeeAll={() => router.push("/diagnostics")}
         />
 
-        {/* Estado de los subsistemas, o el detalle de la pieza tocada */}
-        <div className="flex flex-col rounded-2xl border border-white/10 bg-white/[0.03] p-3">
-          <span className="mb-2 block text-[10px] uppercase tracking-[0.22em] text-accent">
-            {piezaTocada ? PART_LABELS[piezaTocada] : "Estado de sistemas"}
-          </span>
-
-          {piezaTocada ? (
-            <button
-              onClick={() => router.push("/diagnostics")}
-              className="flex flex-1 flex-col items-center justify-center gap-1 text-center"
-            >
-              <span className="text-sm text-silver">
-                {parts[piezaTocada] === "error"
-                  ? "Avería en esta pieza"
-                  : parts[piezaTocada] === "warning"
-                    ? "Aviso en esta pieza"
-                    : "Sin averías en esta pieza"}
-              </span>
-              <span className="text-[10px] uppercase tracking-[0.2em] text-muted">
-                Toca para ver el diagnóstico
-              </span>
-            </button>
-          ) : (
-            <>
-              <div className="flex flex-1 items-center justify-around">
-                <StatusLight kind="engine" status={t?.systems.engine ?? "unknown"} />
-                <StatusLight kind="abs" status={t?.systems.abs ?? "unknown"} />
-                <StatusLight kind="esp" status={t?.systems.esp ?? "unknown"} />
-                <StatusLight kind="airbag" status={t?.systems.airbag ?? "unknown"} />
-              </div>
-              <p className="text-center text-[10px] uppercase tracking-[0.2em] text-muted">
-                {t?.engineRunning ? "Motor en marcha" : "Motor parado"} ·{" "}
-                {(t?.odometer ?? 0).toFixed(0)} km
-              </p>
-            </>
-          )}
+        <div className="flex items-center justify-around px-1">
+          <StatusLight kind="abs" status={t?.systems.abs ?? "unknown"} />
+          <StatusLight kind="esp" status={t?.systems.esp ?? "unknown"} />
+          <StatusLight kind="airbag" status={t?.systems.airbag ?? "unknown"} />
+          <StatusLight kind="engine" status={t?.systems.engine ?? "unknown"} />
         </div>
 
-        <InfoList
-          title="Viaje actual"
-          rows={[
-            { label: "Distancia", value: fmt(viaje.distancia, 1, "km") },
-            { label: "Consumo medio", value: fmt(viaje.consumo, 1, "L/100km") },
-            {
-              label: "Tiempo",
-              value:
-                viaje.minutos >= 60
-                  ? `${Math.floor(viaje.minutos / 60)} h ${viaje.minutos % 60} min`
-                  : `${viaje.minutos} min`,
-            },
-            { label: "Autonomía", value: fmt(viaje.autonomia, 0, "km") },
-            { label: "En depósito", value: fmt(viaje.litrosRestantes, 1, "L") },
-          ]}
-        />
+        <div className="flex flex-col justify-center px-1">
+          <div className="grid grid-cols-4">
+            {[
+              {
+                l: "Distancia",
+                v: fmt(viaje.distancia, 1),
+                u: "km",
+                i: (
+                  <path d="M6.5 20.5V8.5a3 3 0 0 1 3-3h5a3 3 0 0 0 3-3M6.5 20.5l-2.2-2.6M6.5 20.5l2.2-2.6" />
+                ),
+              },
+              {
+                l: "Consumo",
+                v: fmt(viaje.consumo, 1),
+                u: "L/100km",
+                i: (
+                  <path d="M12 3.5c3.2 3.6 5.2 6.3 5.2 8.8a5.2 5.2 0 1 1-10.4 0c0-2.5 2-5.2 5.2-8.8z" />
+                ),
+              },
+              {
+                l: "Tiempo",
+                v: tiempo,
+                u: "h",
+                i: (
+                  <>
+                    <circle cx="12" cy="12.5" r="8" />
+                    <path d="M12 8v4.5l3 1.8" />
+                  </>
+                ),
+              },
+              {
+                l: "Autonomía",
+                v: fmt(viaje.autonomia, 0),
+                u: "km",
+                i: (
+                  <path d="M5 20V5.5a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1V20M3.5 20h11M13 10.5h3a2 2 0 0 1 2 2v3.5a1.5 1.5 0 0 0 3 0V9l-2.5-2.5M7 8.5h4" />
+                ),
+              },
+            ].map((d, i) => (
+              <div
+                key={d.l}
+                className={`flex min-w-0 flex-col items-center px-1 ${
+                  i > 0 ? "border-l border-linea/15" : ""
+                }`}
+              >
+                <span className="flex max-w-full items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.04em] text-accent">
+                  <svg viewBox="0 0 24 24" className="h-[19px] w-[19px] shrink-0" {...trazo}>
+                    {d.i}
+                  </svg>
+                  <span className="truncate">{d.l}</span>
+                </span>
+                <span className="flex items-baseline gap-1">
+                  <span className="text-[22px] font-semibold leading-tight tabular-nums text-silver">
+                    {d.v}
+                  </span>
+                  <span className="text-[10px] text-muted">{d.u}</span>
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );

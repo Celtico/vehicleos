@@ -14,7 +14,7 @@
  */
 import { useId, useMemo, useRef, type KeyboardEvent } from "react";
 import { clamp, useAnimatedNumber } from "./animation";
-import { MBUX } from "./theme";
+import { alfa, MBUX } from "./theme";
 import { WheelBadge } from "./WheelBadge";
 
 /** Piezas del vehículo que pueden resaltarse individualmente. */
@@ -34,7 +34,7 @@ export type VehiclePartId =
 export type PartSeverity = "ok" | "info" | "warning" | "error";
 
 export interface VehicleModelProps {
-  /** Ancho del componente en píxeles (pensado para 280–520). */
+  /** Lado largo del dibujo en píxeles (pensado para 100–520). */
   size?: number;
   /** Estado por pieza; las ausentes se consideran "ok". */
   parts?: Partial<Record<VehiclePartId, PartSeverity>>;
@@ -42,6 +42,18 @@ export interface VehicleModelProps {
   engineHeat?: number;
   /** Etiqueta opcional bajo cada rueda, p.ej. presión TPMS ("2.1 bar") o "—". */
   wheelLabels?: Partial<Record<"fl" | "fr" | "rl" | "rr", string>>;
+  /**
+   * Orientación del dibujo. "up" es la de planta clásica, con el morro
+   * arriba; "left" lo tumba (morro a la izquierda), que es lo que cabe en un
+   * hueco apaisado sin dejar vacío a los lados.
+   */
+  orientation?: "up" | "left";
+  /**
+   * Dibujo plano de trazo, sin chapa ni reflejos: para los huecos pequeños,
+   * donde el sombreado se convierte en manchas y estorba. El color de las
+   * piezas en avería sigue siendo el mismo.
+   */
+  iconic?: boolean;
   /** Callback al tocar una pieza (para abrir el detalle de la avería). */
   onPartClick?: (part: VehiclePartId) => void;
 }
@@ -82,6 +94,17 @@ const DOOR_FL_PATH = "M 67.5 128 L 88 133 L 88 194 L 65.5 194 Q 64.8 160 67.5 12
 const DOOR_RL_PATH = "M 65.5 198 L 88 198 L 88 239 L 66 239 Q 64.6 218 65.5 198 Z";
 const DOOR_FR_PATH = "M 172.5 128 L 152 133 L 152 194 L 174.5 194 Q 175.2 160 172.5 128 Z";
 const DOOR_RR_PATH = "M 174.5 198 L 152 198 L 152 239 L 174 239 Q 175.4 218 174.5 198 Z";
+
+/**
+ * Ventanillas laterales del pictograma: cuatro ranuras estrechas pegadas al
+ * flanco, con el canto exterior siguiendo la curva de la carrocería.
+ */
+const SIDE_GLASS = [
+  "M 71 132 L 84 136 L 84 190 L 69.5 190 Q 69 160 71 132 Z",
+  "M 169 132 L 156 136 L 156 190 L 170.5 190 Q 171 160 169 132 Z",
+  "M 69.5 196 L 84 196 L 84 236 L 70 236 Q 69 216 69.5 196 Z",
+  "M 170.5 196 L 156 196 L 156 236 L 170 236 Q 171 216 170.5 196 Z",
+];
 
 /** Devuelve el `d` de un rectángulo con esquinas redondeadas. */
 function roundedRect(x: number, y: number, w: number, h: number, r: number): string {
@@ -362,6 +385,8 @@ export function VehicleModel({
   parts,
   engineHeat = 0,
   wheelLabels,
+  orientation = "up",
+  iconic = false,
   onPartClick,
 }: VehicleModelProps) {
   // `useId` puede devolver caracteres no válidos en un selector CSS (":r1:").
@@ -394,7 +419,19 @@ export function VehicleModel({
   );
 
   const glowFilter = `url(#${uid}-glow)`;
-  const height = Math.round((size * VB_H) / VB_W);
+  // En modo icono no hay degradados: solo contorno y relleno transparente.
+  // Modo icono: silueta maciza con los cristales y las ópticas caladas al
+  // color del fondo, como un pictograma. Nada de trazo ni degradados.
+  const macizo = "var(--car-icono)";
+  const hueco = "rgb(var(--c-bg))";
+  const pintura = iconic ? macizo : `url(#${uid}-paint)`;
+  const cristal = iconic ? hueco : `url(#${uid}-glass)`;
+  // `size` es siempre el lado largo del dibujo, mire a donde mire.
+  const tumbado = orientation === "left";
+  const largo = size;
+  const corto = Math.round((size * VB_W) / VB_H);
+  const ancho = tumbado ? largo : corto;
+  const alto = tumbado ? corto : largo;
 
   // Hover y foco de teclado, acotados a este SVG por su id.
   const css =
@@ -406,9 +443,9 @@ export function VehicleModel({
   return (
     <svg
       id={`${uid}-svg`}
-      width={size}
-      height={height}
-      viewBox={`0 0 ${VB_W} ${VB_H}`}
+      width={ancho}
+      height={alto}
+      viewBox={tumbado ? `0 0 ${VB_H} ${VB_W}` : `0 0 ${VB_W} ${VB_H}`}
       role="img"
       aria-label={
         anyActive
@@ -479,197 +516,236 @@ export function VehicleModel({
         </clipPath>
       </defs>
 
-      {/* ---------------------------------------------------------------- */}
-      {/* Suelo: luz ambiental y sombra de contacto                         */}
-      {/* ---------------------------------------------------------------- */}
-      <ellipse cx={120} cy={182} rx={94} ry={160} fill={`url(#${uid}-ground)`} />
-      <path
-        d={BODY_PATH}
-        fill="var(--car-0)"
-        opacity={0.85}
-        filter={`url(#${uid}-soft)`}
-        transform="translate(0 10)"
-      />
+      {/* Todo el dibujo se gira en bloque cuando va tumbado: así las piezas,
+          sus zonas de toque y el foco de teclado siguen coincidiendo. */}
+      <g transform={tumbado ? `translate(0 ${VB_W}) rotate(-90)` : undefined}>
+        {/* ---------------------------------------------------------------- */}
+        {/* Suelo: luz ambiental y sombra de contacto                         */}
+        {/* ---------------------------------------------------------------- */}
+        {iconic ? null : (
+          <>
+            <ellipse cx={120} cy={182} rx={94} ry={160} fill={`url(#${uid}-ground)`} />
+            <path
+              d={BODY_PATH}
+              fill="var(--car-0)"
+              opacity={0.85}
+              filter={`url(#${uid}-soft)`}
+              transform="translate(0 10)"
+            />
+          </>
+        )}
 
-      {/* ---------------------------------------------------------------- */}
-      {/* Carrocería                                                        */}
-      {/* ---------------------------------------------------------------- */}
-      {/* Contorno cian tenue: el coche "en reposo" nunca queda apagado del todo */}
-      <path
-        d={BODY_PATH}
-        fill="none"
-        stroke={MBUX.accent}
-        strokeWidth={4}
-        opacity={anyActive ? 0.11 : 0.19}
-        filter={glowFilter}
-      />
-      <path
-        d={BODY_PATH}
-        fill={`url(#${uid}-paint)`}
-        stroke={MBUX.accentDim}
-        strokeWidth={1.2}
-        strokeLinejoin="round"
-      />
-      <g clipPath={`url(#${uid}-clip-body)`}>
-        <ellipse cx={76} cy={124} rx={48} ry={152} fill={`url(#${uid}-sheen)`} />
-        <ellipse cx={172} cy={250} rx={30} ry={110} fill={`url(#${uid}-sheen)`} opacity={0.6} />
-      </g>
-
-      {/* Ópticas delanteras */}
-      <path d="M 129 34 Q 142 37 150 46 Q 140 42 128 40 Z" fill={`url(#${uid}-head)`} />
-      <path d="M 111 34 Q 98 37 90 46 Q 100 42 112 40 Z" fill={`url(#${uid}-head)`} />
-      {/* Pilotos traseros */}
-      <path
-        d="M 130 300 Q 143 297 153 291 Q 148 301 132 307 Z"
-        fill={MBUX.danger}
-        opacity={0.5}
-      />
-      <path d="M 110 300 Q 97 297 87 291 Q 92 301 108 307 Z" fill={MBUX.danger} opacity={0.5} />
-
-      {/* ---------------------------------------------------------------- */}
-      {/* Capó / vano motor (base + tinte de calor animado)                 */}
-      {/* ---------------------------------------------------------------- */}
-      <path
-        ref={hoodGlowRef}
-        d={HOOD_PATH}
-        fill="none"
-        stroke={MBUX.accent}
-        strokeWidth={7}
-        opacity={0}
-        filter={glowFilter}
-      />
-      <path
-        d={HOOD_PATH}
-        fill={`url(#${uid}-hood)`}
-        stroke="rgba(148,178,184,0.2)"
-        strokeWidth={0.9}
-        strokeLinejoin="round"
-      />
-      <path ref={hoodHeatRef} d={HOOD_PATH} fill={MBUX.accent} opacity={0.06} />
-      {/* Nervios del capó */}
-      <path
-        d="M 103 62 L 99 110 M 137 62 L 141 110"
-        stroke="rgba(200,214,218,0.13)"
-        strokeWidth={0.9}
-        fill="none"
-      />
-
-      {/* ---------------------------------------------------------------- */}
-      {/* Habitáculo: parabrisas, techo con reflejo y luneta                */}
-      {/* ---------------------------------------------------------------- */}
-      <path
-        d={WINDSHIELD_PATH}
-        fill={`url(#${uid}-glass)`}
-        stroke="rgba(0,210,190,0.22)"
-        strokeWidth={0.9}
-        strokeLinejoin="round"
-      />
-      <path
-        d={ROOF_PATH}
-        fill={`url(#${uid}-paint)`}
-        stroke="rgba(148,178,184,0.22)"
-        strokeWidth={0.9}
-        strokeLinejoin="round"
-      />
-      <g clipPath={`url(#${uid}-clip-roof)`}>
-        {/* Reflejo especular diagonal sobre el techo */}
-        <path d="M 84 150 L 122 150 L 100 222 L 74 222 Z" fill={`url(#${uid}-spec)`} />
+        {/* ---------------------------------------------------------------- */}
+        {/* Carrocería                                                        */}
+        {/* ---------------------------------------------------------------- */}
+        {/* Contorno cian tenue: el coche "en reposo" nunca queda apagado del todo */}
         <path
-          d="M 130 150 L 142 150 L 122 222 L 112 222 Z"
-          fill={`url(#${uid}-spec)`}
-          opacity={0.45}
+          d={BODY_PATH}
+          fill="none"
+          stroke={MBUX.accent}
+          strokeWidth={4}
+          opacity={iconic ? 0 : anyActive ? 0.11 : 0.19}
+          filter={glowFilter}
         />
-      </g>
-      <path
-        d={REAR_GLASS_PATH}
-        fill={`url(#${uid}-glass)`}
-        stroke="rgba(0,210,190,0.2)"
-        strokeWidth={0.9}
-        strokeLinejoin="round"
-      />
-
-      {/* ---------------------------------------------------------------- */}
-      {/* Puertas y retrovisores                                            */}
-      {/* ---------------------------------------------------------------- */}
-      {[DOOR_FL_PATH, DOOR_FR_PATH, DOOR_RL_PATH, DOOR_RR_PATH].map((d) => (
         <path
-          key={d}
-          d={d}
-          fill="rgba(255,255,255,0.022)"
-          stroke="rgba(148,178,184,0.18)"
-          strokeWidth={0.8}
+          d={BODY_PATH}
+          fill={pintura}
+          stroke={iconic ? "none" : MBUX.accentDim}
+          strokeWidth={iconic ? 0 : 1.2}
           strokeLinejoin="round"
         />
-      ))}
-      {/* Manetas */}
-      <path
-        d="M 70 178 h 12 M 158 178 h 12 M 70 226 h 11 M 159 226 h 11"
-        stroke="rgba(200,214,218,0.28)"
-        strokeWidth={1.6}
-        strokeLinecap="round"
-        fill="none"
-      />
-      {/* Retrovisores */}
-      <path
-        d="M 66 142 L 57 145 L 59 150 L 67 148 Z"
-        fill="var(--car-3)"
-        stroke={MBUX.accentDim}
-        strokeWidth={0.7}
-      />
-      <path
-        d="M 174 142 L 183 145 L 181 150 L 173 148 Z"
-        fill="var(--car-3)"
-        stroke={MBUX.accentDim}
-        strokeWidth={0.7}
-      />
+        {iconic ? null : (
+          <g clipPath={`url(#${uid}-clip-body)`}>
+            <ellipse cx={76} cy={124} rx={48} ry={152} fill={`url(#${uid}-sheen)`} />
+            <ellipse
+              cx={172}
+              cy={250}
+              rx={30}
+              ry={110}
+              fill={`url(#${uid}-sheen)`}
+              opacity={0.6}
+            />
+          </g>
+        )}
 
-      {/* ---------------------------------------------------------------- */}
-      {/* Ruedas                                                            */}
-      {/* ---------------------------------------------------------------- */}
-      {WHEELS.map((w) => (
-        <g key={w.corner}>
-          <path
-            d={tyrePath(w)}
-            fill={`url(#${uid}-tyre)`}
-            stroke="rgba(148,178,184,0.22)"
-            strokeWidth={0.9}
-          />
-          {/* Llanta insinuada */}
-          <path d={rimPath(w)} fill="none" stroke="rgba(200,214,218,0.16)" strokeWidth={0.9} />
-        </g>
-      ))}
-
-      {/* ---------------------------------------------------------------- */}
-      {/* Capa interactiva: resaltes por estado                             */}
-      {/* ---------------------------------------------------------------- */}
-      {PART_SHAPES.map((shape) => (
-        <PartOverlay
-          key={shape.part}
-          partId={shape.part}
-          d={shape.d}
-          severity={severityOf(shape.part)}
-          glowFilter={glowFilter}
-          onActivate={onPartClick}
+        {/* Ópticas delanteras */}
+        <path
+          d="M 129 34 Q 142 37 150 46 Q 140 42 128 40 Z"
+          fill={iconic ? hueco : `url(#${uid}-head)`}
         />
-      ))}
+        <path
+          d="M 111 34 Q 98 37 90 46 Q 100 42 112 40 Z"
+          fill={iconic ? hueco : `url(#${uid}-head)`}
+        />
+        {/* Pilotos traseros */}
+        <path
+          d="M 130 300 Q 143 297 153 291 Q 148 301 132 307 Z"
+          fill={MBUX.danger}
+          opacity={0.5}
+        />
+        <path
+          d="M 110 300 Q 97 297 87 291 Q 92 301 108 307 Z"
+          fill={MBUX.danger}
+          opacity={0.5}
+        />
 
-      {/* ---------------------------------------------------------------- */}
-      {/* Etiquetas de rueda (siempre por encima, con fondo opaco)          */}
-      {/* ---------------------------------------------------------------- */}
-      {WHEELS.map((w) => {
-        const text = wheelLabels?.[w.corner];
-        if (!text) return null;
-        const severity = severityOf(w.part);
-        return (
-          <WheelBadge
-            key={`badge-${w.corner}`}
-            x={w.badge.x}
-            y={w.badge.y}
-            text={text}
-            color={severity === "ok" ? MBUX.silver : SEVERITY_COLOR[severity]}
+        {/* ---------------------------------------------------------------- */}
+        {/* Capó / vano motor (base + tinte de calor animado)                 */}
+        {/* ---------------------------------------------------------------- */}
+        <path
+          ref={hoodGlowRef}
+          d={HOOD_PATH}
+          fill="none"
+          stroke={MBUX.accent}
+          strokeWidth={7}
+          opacity={0}
+          filter={glowFilter}
+        />
+        <path
+          d={HOOD_PATH}
+          fill={iconic ? "none" : `url(#${uid}-hood)`}
+          stroke={iconic ? "none" : "rgba(148,178,184,0.2)"}
+          strokeWidth={iconic ? 0 : 0.9}
+          strokeLinejoin="round"
+        />
+        <path ref={hoodHeatRef} d={HOOD_PATH} fill={MBUX.accent} opacity={0.06} />
+        {/* Nervios del capó */}
+        <path
+          d="M 103 62 L 99 110 M 137 62 L 141 110"
+          stroke="rgba(200,214,218,0.13)"
+          strokeWidth={0.9}
+          fill="none"
+        />
+
+        {/* ---------------------------------------------------------------- */}
+        {/* Habitáculo: parabrisas, techo con reflejo y luneta                */}
+        {/* ---------------------------------------------------------------- */}
+        <path
+          d={WINDSHIELD_PATH}
+          fill={cristal}
+          stroke={iconic ? "none" : "rgba(0,210,190,0.22)"}
+          strokeWidth={iconic ? 0 : 0.9}
+          strokeLinejoin="round"
+        />
+        <path
+          d={ROOF_PATH}
+          fill={pintura}
+          stroke={iconic ? "none" : "rgba(148,178,184,0.22)"}
+          strokeWidth={iconic ? 0 : 0.9}
+          strokeLinejoin="round"
+        />
+        <g clipPath={`url(#${uid}-clip-roof)`} opacity={iconic ? 0 : 1}>
+          {/* Reflejo especular diagonal sobre el techo */}
+          <path d="M 84 150 L 122 150 L 100 222 L 74 222 Z" fill={`url(#${uid}-spec)`} />
+          <path
+            d="M 130 150 L 142 150 L 122 222 L 112 222 Z"
+            fill={`url(#${uid}-spec)`}
+            opacity={0.45}
           />
-        );
-      })}
+        </g>
+        <path
+          d={REAR_GLASS_PATH}
+          fill={cristal}
+          stroke={iconic ? "none" : "rgba(0,210,190,0.2)"}
+          strokeWidth={iconic ? 0 : 0.9}
+          strokeLinejoin="round"
+        />
+
+        {/* ---------------------------------------------------------------- */}
+        {/* Puertas y retrovisores                                            */}
+        {/* ---------------------------------------------------------------- */}
+        {iconic
+          ? SIDE_GLASS.map((d) => <path key={d} d={d} fill={hueco} />)
+          : [DOOR_FL_PATH, DOOR_FR_PATH, DOOR_RL_PATH, DOOR_RR_PATH].map((d) => (
+              <path
+                key={d}
+                d={d}
+                fill="rgba(255,255,255,0.022)"
+                stroke="rgba(148,178,184,0.18)"
+                strokeWidth={0.8}
+                strokeLinejoin="round"
+              />
+            ))}
+        {/* Manetas */}
+        <path
+          d="M 70 178 h 12 M 158 178 h 12 M 70 226 h 11 M 159 226 h 11"
+          stroke="rgba(200,214,218,0.28)"
+          strokeWidth={iconic ? 0 : 1.6}
+          strokeLinecap="round"
+          fill="none"
+        />
+        {/* Retrovisores */}
+        <path
+          d="M 66 142 L 57 145 L 59 150 L 67 148 Z"
+          fill={iconic ? macizo : "var(--car-3)"}
+          stroke={iconic ? "none" : MBUX.accentDim}
+          strokeWidth={iconic ? 0 : 0.7}
+        />
+        <path
+          d="M 174 142 L 183 145 L 181 150 L 173 148 Z"
+          fill={iconic ? macizo : "var(--car-3)"}
+          stroke={iconic ? "none" : MBUX.accentDim}
+          strokeWidth={iconic ? 0 : 0.7}
+        />
+
+        {/* ---------------------------------------------------------------- */}
+        {/* Ruedas                                                            */}
+        {/* ---------------------------------------------------------------- */}
+        {WHEELS.map((w) => (
+          <g key={w.corner}>
+            <path
+              d={tyrePath(w)}
+              fill={iconic ? macizo : `url(#${uid}-tyre)`}
+              stroke={iconic ? "none" : "rgba(148,178,184,0.22)"}
+              strokeWidth={iconic ? 0 : 0.9}
+            />
+            {/* Llanta insinuada */}
+            <path
+              d={rimPath(w)}
+              fill="none"
+              stroke="rgba(200,214,218,0.16)"
+              strokeWidth={iconic ? 0 : 0.9}
+            />
+          </g>
+        ))}
+
+        {/* ---------------------------------------------------------------- */}
+        {/* Capa interactiva: resaltes por estado                             */}
+        {/* ---------------------------------------------------------------- */}
+        {PART_SHAPES.map((shape) => (
+          <PartOverlay
+            key={shape.part}
+            partId={shape.part}
+            d={shape.d}
+            severity={severityOf(shape.part)}
+            glowFilter={glowFilter}
+            onActivate={onPartClick}
+          />
+        ))}
+
+        {/* ---------------------------------------------------------------- */}
+        {/* Etiquetas de rueda (siempre por encima, con fondo opaco)          */}
+        {/* ---------------------------------------------------------------- */}
+        {WHEELS.map((w) => {
+          const text = wheelLabels?.[w.corner];
+          if (!text) return null;
+          const severity = severityOf(w.part);
+          return (
+            // Contragiro: el dibujo va tumbado pero el texto se lee derecho.
+            <g
+              key={`badge-${w.corner}`}
+              transform={tumbado ? `rotate(90 ${w.badge.x} ${w.badge.y})` : undefined}
+            >
+              <WheelBadge
+                x={w.badge.x}
+                y={w.badge.y}
+                text={text}
+                color={severity === "ok" ? MBUX.silver : SEVERITY_COLOR[severity]}
+              />
+            </g>
+          );
+        })}
+      </g>
     </svg>
   );
 }

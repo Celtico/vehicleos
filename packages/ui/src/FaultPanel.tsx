@@ -25,14 +25,28 @@ export interface FaultPanelProps {
   onSeeAll?: () => void;
   /** Máximo de averías listadas antes de resumir (por defecto 3). */
   max?: number;
+  /** Sin recuadro ni marcos internos: solo el contenido sobre el fondo. */
+  plain?: boolean;
 }
 
-export function FaultPanel({ faults, onSelect, onSeeAll, max = 3 }: FaultPanelProps) {
+export function FaultPanel({
+  faults,
+  onSelect,
+  onSeeAll,
+  max = 3,
+  plain = false,
+}: FaultPanelProps) {
   const visibles = faults.slice(0, max);
   const restantes = faults.length - visibles.length;
 
   return (
-    <div className="panel-cockpit flex h-full flex-col rounded-2xl p-3">
+    <div
+      className={
+        plain
+          ? "flex h-full flex-col py-1"
+          : "panel-cockpit flex h-full flex-col rounded-2xl p-3"
+      }
+    >
       <div className="mb-2 flex items-center justify-between">
         <span
           className="truncate text-[11.5px] font-semibold uppercase tracking-[0.1em]"
@@ -76,8 +90,10 @@ export function FaultPanel({ faults, onSelect, onSeeAll, max = 3 }: FaultPanelPr
               <li key={f.code}>
                 <button
                   onClick={() => onSelect?.(f.code)}
-                  className="flex w-full items-center gap-2 rounded-xl border px-2.5 py-2 text-left transition-colors hover:brightness-110"
-                  style={{ borderColor: alfa(token, 0.25) }}
+                  className={`flex w-full items-center gap-2 text-left transition-colors hover:brightness-110 ${
+                    plain ? "py-1.5" : "rounded-xl border px-2.5 py-2"
+                  }`}
+                  style={plain ? undefined : { borderColor: alfa(token, 0.25) }}
                 >
                   <svg
                     width="16"
@@ -114,7 +130,9 @@ export function FaultPanel({ faults, onSelect, onSeeAll, max = 3 }: FaultPanelPr
       {faults.length > 0 && onSeeAll ? (
         <button
           onClick={onSeeAll}
-          className="mt-1.5 w-full rounded-xl border border-linea/20 py-1.5 text-[11px] font-semibold uppercase tracking-[0.1em] text-muted transition-colors hover:border-accent/40 hover:text-accent"
+          className={`mt-auto text-[11px] font-semibold uppercase tracking-[0.1em] text-muted transition-colors hover:text-accent ${
+            plain ? "text-left" : "w-full rounded-xl border border-linea/20 py-1.5"
+          }`}
         >
           {restantes > 0 ? `Ver las ${faults.length}` : "Ver diagnóstico"}
         </button>

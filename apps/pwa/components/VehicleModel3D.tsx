@@ -71,6 +71,8 @@ export interface VehicleModel3DProps {
   height?: number;
   /** Callback al tocar una pieza (para abrir el detalle de la avería). */
   onPartClick?: (part: VehiclePartId) => void;
+  /** Qué dibujar si el dispositivo no puede con WebGL. */
+  fallback?: React.ReactNode;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -506,6 +508,7 @@ export function VehicleModel3D({
   engineHeat = 0,
   height = 300,
   onPartClick,
+  fallback,
 }: VehicleModel3DProps) {
   const contenedorRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -532,22 +535,56 @@ export function VehicleModel3D({
   /* Montaje: escena, carga del modelo y bucle de render                     */
   /* ---------------------------------------------------------------------- */
   useEffect(() => {
-    const canvas = canvasRef.current;
     const contenedor = contenedorRef.current;
-    if (!canvas || !contenedor) return;
+    if (!contenedor) return;
+
+    // El <canvas> se crea aquí y no en el JSX a propósito. Un canvas solo
+    // admite UN contexto WebGL en toda su vida: si React reutiliza el mismo
+    // elemento entre montajes (StrictMode lo hace en desarrollo), el segundo
+    // getContext devuelve null y three revienta por dentro con un
+    // "Cannot read properties of null". Creando uno nuevo por efecto, cada
+    // montaje empieza limpio.
+    const canvas = document.createElement("canvas");
+    canvas.setAttribute("role", "img");
+    canvas.className = "block h-full w-full";
+    canvas.style.touchAction = "none";
+    canvas.style.cursor = onPartClickRef.current ? "grab" : "default";
+    canvasRef.current = canvas;
+    contenedor.appendChild(canvas);
 
     const sinMovimiento = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     /* --- Renderer ------------------------------------------------------- */
-    let renderer: THREE.WebGLRenderer;
-    try {
-      renderer = new THREE.WebGLRenderer({
-        canvas,
-        antialias: true,
-        alpha: true, // fondo transparente: se integra con el negro del cockpit
-        powerPreference: "high-performance",
-      });
-    } catch {
+    // Se intenta de más a menos exigente. Pedir "high-performance" o
+    // antialias no es gratis: hay GPU (y la de una tablet Android barata es
+    // justo de esas) donde esa combinación devuelve un contexto nulo y three
+    // revienta dentro, así que se degrada en vez de rendirse a la primera.
+    const INTENTOS: THREE.WebGLRendererParameters[] = [
+      { antialias: true, powerPreference: "high-performance" },
+      { antialias: true },
+      { antialias: false },
+    ];
+    let renderer: THREE.WebGLRenderer | null = null;
+    let ultimoFallo: unknown = null;
+    for (const opciones of INTENTOS) {
+      try {
+        renderer = new THREE.WebGLRenderer({
+          canvas,
+          alpha: true, // fondo transparente: se integra con el negro del cockpit
+          ...opciones,
+        });
+        break;
+      } catch (e) {
+        ultimoFallo = e;
+      }
+    }
+    if (!renderer) {
+      canvas.remove();
+      const e = ultimoFallo;
+      // El motivo importa: "no hay WebGL" y "el driver ha fallado al crear el
+      // contexto" se arreglan de forma distinta, y sin el mensaje real no hay
+      // manera de saber cuál de los dos es desde una tablet en el coche.
+      console.error("[VehicleModel3D] no se pudo crear el renderer:", e);
       setError("Este dispositivo no puede mostrar la vista 3D.");
       return;
     }
@@ -1225,8 +1262,16 @@ export function VehicleModel3D({
       pmrem.dispose();
       renderer.dispose();
       renderer.forceContextLoss();
+      canvas.remove();
+      if (canvasRef.current === canvas) canvasRef.current = null;
     };
   }, []);
+
+  // El nombre accesible vive en un atributo del lienzo, que ya no lo pone
+  // React: hay que refrescarlo a mano cuando cambia el estado del coche.
+  useEffect(() => {
+    canvasRef.current?.setAttribute("aria-label", etiqueta);
+  }, [etiqueta, listo]);
 
   /* ---------------------------------------------------------------------- */
   /* Props → escena                                                          */
@@ -1249,14 +1294,6 @@ export function VehicleModel3D({
       data-testid="vehicle-3d"
       data-listo={listo ? "si" : "no"}
     >
-      <canvas
-        ref={canvasRef}
-        role="img"
-        aria-label={etiqueta}
-        className="block h-full w-full"
-        style={{ touchAction: "none", cursor: onPartClick ? "grab" : "default" }}
-      />
-
       {cargando ? (
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-2">
           <span className="text-[10px] uppercase tracking-[0.25em] text-muted">
@@ -1273,8 +1310,9 @@ export function VehicleModel3D({
       ) : null}
 
       {error ? (
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center px-6 text-center">
-          <span className="text-xs text-muted">{error}</span>
+        <div className="flex h-full flex-col items-center justify-center gap-2">
+          {fallback}
+          <span className="px-6 text-center text-[11px] text-muted">{error}</span>
         </div>
       ) : null}
     </div>

@@ -1,26 +1,41 @@
 /**
- * GaugeArc — arco de instrumentación genérico estilo MBUX.
+ * GaugeArc — reloj de instrumentación grande, estilo cuadro de coche.
  *
- * El progreso y el número central se animan con requestAnimationFrame
- * (ver `useAnimatedNumber`): React solo renderiza la carcasa estática;
- * cada frame muta los atributos SVG mediante refs.
+ * Bisel circular completo, escala de 270° con marcas mayores rotuladas y
+ * menores sin rotular, arco de progreso grueso y un testigo brillante en el
+ * valor actual. El número va dentro, con la unidad debajo: no lleva rótulo
+ * inferior porque en un cuadro de coche el velocímetro no necesita que le
+ * pongan "velocidad" al lado (el nombre accesible sí lo lleva).
+ *
+ * El progreso, el testigo y el número se animan con requestAnimationFrame
+ * (ver `useAnimatedNumber`): React solo renderiza la carcasa estática; cada
+ * frame muta atributos SVG mediante refs.
  */
 import { useId, useMemo, useRef } from "react";
 import { clamp, useAnimatedNumber } from "./animation";
 import { describeArc, polarToCartesian } from "./arc";
-import { MBUX, zoneColor, type GaugeZone } from "./theme";
+import { alfa, MBUX, zoneColor, type GaugeZone } from "./theme";
 
-/** Ángulos del arco (0° = arriba): de -120° a +120° → barrido de 240°. */
-const START = -120;
-const END = 120;
+/** Ángulos del arco (0° = arriba): de -135° a +135° → barrido de 270°. */
+const START = -135;
+const END = 135;
 const SWEEP = END - START;
+
+/** Radios en unidades del viewBox (200×200, centro en 100,100). */
+const R_BISEL = 96;
+const R_ZONA = 90;
+const R_ARCO = 90;
+const R_MARCA_FUERA = 80;
+const R_MARCA_MAYOR = 69;
+const R_MARCA_MENOR = 75;
+const R_ROTULO = 62;
 
 export interface GaugeArcProps {
   /** Último valor recibido (objetivo de la animación). */
   value: number;
   min?: number;
   max?: number;
-  /** Etiqueta inferior (p. ej. "VELOCIDAD"). */
+  /** Nombre accesible (p. ej. "Velocidad"). No se dibuja. */
   label?: string;
   /** Unidad mostrada bajo el número (p. ej. "km/h"). */
   unit?: string;
@@ -28,11 +43,13 @@ export interface GaugeArcProps {
   size?: number;
   /** Color base del progreso. */
   color?: string;
-  /** Zonas de color (p. ej. zona roja). */
+  /** Zonas de color sobre el bisel (p. ej. zona roja). */
   zones?: GaugeZone[];
-  /** Distancia entre marcas graduadas (en unidades del valor). */
+  /** Distancia entre marcas mayores (en unidades del valor). */
   tickStep?: number;
-  /** Formatea la etiqueta de cada marca. */
+  /** Marcas menores por cada tramo entre mayores. */
+  minorPerStep?: number;
+  /** Formatea la etiqueta de cada marca mayor. */
   tickLabel?: (v: number) => string;
   /** Formatea el número central. */
   format?: (v: number) => string;
@@ -44,52 +61,73 @@ export function GaugeArc({
   max = 100,
   label,
   unit,
-  size = 280,
+  size = 300,
   color = MBUX.accent,
   zones,
   tickStep,
+  minorPerStep = 4,
   tickLabel = (v) => String(Math.round(v)),
   format = (v) => String(Math.round(v)),
 }: GaugeArcProps) {
   const uid = useId();
   const progressRef = useRef<SVGPathElement | null>(null);
   const glowRef = useRef<SVGPathElement | null>(null);
+  const marcaRef = useRef<SVGLineElement | null>(null);
   const textRef = useRef<SVGTextElement | null>(null);
 
   const range = max - min || 1;
 
-  // Frame de animación: muta d/stroke del arco y el texto central.
+  // Frame de animación: arco, testigo de posición y número central.
   useAnimatedNumber(value, (v) => {
     const frac = clamp((v - min) / range, 0, 1);
     const endAngle = START + Math.max(0.5, frac * SWEEP);
-    const d = describeArc(100, 100, 84, START, endAngle);
+    const d = describeArc(100, 100, R_ARCO, START, endAngle);
     const stroke = zoneColor(v, zones, color);
+    const visible = frac < 0.004 ? "0" : "1";
+
     if (progressRef.current) {
       progressRef.current.setAttribute("d", d);
       progressRef.current.setAttribute("stroke", stroke);
-      progressRef.current.setAttribute("opacity", frac < 0.004 ? "0" : "1");
+      progressRef.current.setAttribute("opacity", visible);
     }
     if (glowRef.current) {
       glowRef.current.setAttribute("d", d);
       glowRef.current.setAttribute("stroke", stroke);
-      glowRef.current.setAttribute("opacity", frac < 0.004 ? "0" : "0.28");
+      glowRef.current.setAttribute("opacity", frac < 0.004 ? "0" : "0.3");
+    }
+    if (marcaRef.current) {
+      const a = polarToCartesian(100, 100, R_ARCO + 6, endAngle);
+      const b = polarToCartesian(100, 100, R_MARCA_FUERA - 3, endAngle);
+      marcaRef.current.setAttribute("x1", String(a.x));
+      marcaRef.current.setAttribute("y1", String(a.y));
+      marcaRef.current.setAttribute("x2", String(b.x));
+      marcaRef.current.setAttribute("y2", String(b.y));
+      marcaRef.current.setAttribute("stroke", stroke);
+      marcaRef.current.setAttribute("opacity", visible);
     }
     if (textRef.current) textRef.current.textContent = format(v);
   });
 
   // Marcas y zonas: estáticas, se calculan una sola vez.
-  const ticks = useMemo(() => {
-    if (!tickStep) return [];
-    const out: { angle: number; label: string; major: boolean }[] = [];
+  const marcas = useMemo(() => {
+    if (!tickStep) return { mayores: [], menores: [] };
+    const mayores: { angle: number; label: string }[] = [];
+    const menores: number[] = [];
+    const paso = tickStep / Math.max(1, minorPerStep);
     for (let v = min; v <= max + 1e-9; v += tickStep) {
-      out.push({
+      mayores.push({
         angle: START + ((v - min) / range) * SWEEP,
         label: tickLabel(v),
-        major: true,
       });
     }
-    return out;
-  }, [min, max, range, tickStep, tickLabel]);
+    for (let v = min; v <= max + 1e-9; v += paso) {
+      // Las menores que coinciden con una mayor no se dibujan dos veces.
+      const resto = (v - min) % tickStep;
+      if (Math.min(resto, tickStep - resto) < paso / 4) continue;
+      menores.push(START + ((v - min) / range) * SWEEP);
+    }
+    return { mayores, menores };
+  }, [min, max, range, tickStep, minorPerStep, tickLabel]);
 
   const zonePaths = useMemo(
     () =>
@@ -97,7 +135,7 @@ export function GaugeArc({
         d: describeArc(
           100,
           100,
-          93,
+          R_ZONA,
           START + ((clamp(z.from, min, max) - min) / range) * SWEEP,
           START + ((clamp(z.to, min, max) - min) / range) * SWEEP,
         ),
@@ -124,34 +162,36 @@ export function GaugeArc({
         </filter>
       </defs>
 
-      {/* Pista de fondo */}
+      {/* Bisel: circunferencia completa, muy tenue */}
+      <circle
+        cx="100"
+        cy="100"
+        r={R_BISEL}
+        fill="none"
+        stroke={alfa("border", 0.55)}
+        strokeWidth={1.2}
+      />
+
+      {/* Pista del arco */}
       <path
-        d={describeArc(100, 100, 84, START, END)}
+        d={describeArc(100, 100, R_ARCO, START, END)}
         fill="none"
         stroke={MBUX.track}
         strokeWidth={9}
         strokeLinecap="round"
       />
 
-      {/* Zonas de color (fina, por fuera de la pista) */}
+      {/* Zonas de color, sobre la propia pista */}
       {zonePaths.map((z, i) => (
-        <path
-          key={i}
-          d={z.d}
-          fill="none"
-          stroke={z.color}
-          strokeWidth={3}
-          strokeLinecap="round"
-          opacity={0.85}
-        />
+        <path key={i} d={z.d} fill="none" stroke={z.color} strokeWidth={9} opacity={0.9} />
       ))}
 
-      {/* Halo del progreso (glow ambiental) */}
+      {/* Halo del progreso */}
       <path
         ref={glowRef}
         fill="none"
         stroke={color}
-        strokeWidth={16}
+        strokeWidth={17}
         strokeLinecap="round"
         filter={`url(#${uid}-blur)`}
         opacity={0}
@@ -165,12 +205,31 @@ export function GaugeArc({
         strokeLinecap="round"
         opacity={0}
       />
+      {/* Testigo del valor actual */}
+      <line ref={marcaRef} stroke={color} strokeWidth={2.2} strokeLinecap="round" opacity={0} />
 
-      {/* Marcas graduadas */}
-      {ticks.map((t, i) => {
-        const p1 = polarToCartesian(100, 100, 74, t.angle);
-        const p2 = polarToCartesian(100, 100, 68, t.angle);
-        const pt = polarToCartesian(100, 100, 58, t.angle);
+      {/* Marcas menores */}
+      {marcas.menores.map((a, i) => {
+        const p1 = polarToCartesian(100, 100, R_MARCA_FUERA, a);
+        const p2 = polarToCartesian(100, 100, R_MARCA_MENOR, a);
+        return (
+          <line
+            key={`m${i}`}
+            x1={p1.x}
+            y1={p1.y}
+            x2={p2.x}
+            y2={p2.y}
+            stroke={alfa("muted", 0.45)}
+            strokeWidth={1}
+          />
+        );
+      })}
+
+      {/* Marcas mayores y sus rótulos */}
+      {marcas.mayores.map((t, i) => {
+        const p1 = polarToCartesian(100, 100, R_MARCA_FUERA, t.angle);
+        const p2 = polarToCartesian(100, 100, R_MARCA_MAYOR, t.angle);
+        const pt = polarToCartesian(100, 100, R_ROTULO, t.angle);
         return (
           <g key={i}>
             <line
@@ -178,15 +237,15 @@ export function GaugeArc({
               y1={p1.y}
               x2={p2.x}
               y2={p2.y}
-              stroke={MBUX.muted}
-              strokeWidth={1.2}
+              stroke={MBUX.silver}
+              strokeWidth={1.8}
             />
             <text
               x={pt.x}
               y={pt.y}
-              fill={MBUX.muted}
-              fontSize={7.5}
-              fontWeight={300}
+              fill={MBUX.silver}
+              fontSize={11}
+              fontWeight={400}
               textAnchor="middle"
               dominantBaseline="middle"
             >
@@ -200,10 +259,10 @@ export function GaugeArc({
       <text
         ref={textRef}
         x={100}
-        y={102}
+        y={96}
         fill={MBUX.text}
-        fontSize={42}
-        fontWeight={200}
+        fontSize={34}
+        fontWeight={300}
         letterSpacing={-1}
         textAnchor="middle"
         dominantBaseline="middle"
@@ -213,27 +272,13 @@ export function GaugeArc({
       {unit ? (
         <text
           x={100}
-          y={128}
+          y={118}
           fill={MBUX.muted}
-          fontSize={10}
-          fontWeight={300}
-          letterSpacing={1.5}
+          fontSize={11}
+          fontWeight={400}
           textAnchor="middle"
         >
           {unit}
-        </text>
-      ) : null}
-      {label ? (
-        <text
-          x={100}
-          y={182}
-          fill={MBUX.silver}
-          fontSize={9}
-          fontWeight={300}
-          letterSpacing={3}
-          textAnchor="middle"
-        >
-          {label.toUpperCase()}
         </text>
       ) : null}
     </svg>

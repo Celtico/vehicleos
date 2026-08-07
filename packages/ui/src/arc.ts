@@ -2,7 +2,15 @@
  * Geometría de arcos SVG para los gauges circulares.
  */
 
-/** Convierte coordenadas polares (0° = arriba, sentido horario) a cartesianas. */
+/**
+ * Convierte coordenadas polares (0° = arriba, sentido horario) a cartesianas.
+ *
+ * El redondeo a tres decimales no es cosmética: `Math.sin` y `Math.cos` no
+ * garantizan el mismo último bit en Node y en el navegador, así que el HTML
+ * del servidor y el del cliente salían con "63.68076002083626" frente a
+ * "63.68076002083627" y React avisaba de discordancia al hidratar. A la
+ * décima de milésima de una unidad de viewBox no lo ve nadie.
+ */
 export function polarToCartesian(
   cx: number,
   cy: number,
@@ -10,7 +18,10 @@ export function polarToCartesian(
   angleDeg: number,
 ): { x: number; y: number } {
   const rad = ((angleDeg - 90) * Math.PI) / 180;
-  return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+  return {
+    x: Math.round((cx + r * Math.cos(rad)) * 1000) / 1000,
+    y: Math.round((cy + r * Math.sin(rad)) * 1000) / 1000,
+  };
 }
 
 /**

@@ -1,15 +1,20 @@
 /**
- * MetricInline — magnitud compacta: icono, valor y barra de rango.
+ * MetricInline — magnitud compacta: arco, icono, valor y etiqueta.
+ *
+ * El arco va arriba rodeando el icono, y no una barra recta debajo: en una
+ * pantalla de coche el arco se lee de reojo (la posición del extremo dice
+ * cuánto queda sin necesidad de leer el número), y además rima con los dos
+ * relojes grandes de los lados en vez de parecer un formulario.
  *
  * Ocupa la mitad que una tarjeta y se lee igual de bien, que es lo que
- * permite poner cinco magnitudes en el hueco donde antes cabían cuatro
- * tarjetas dejando aire muerto alrededor.
+ * permite poner cinco magnitudes donde antes cabían cuatro tarjetas
+ * dejando aire muerto alrededor.
  *
  * Anima por refs con requestAnimationFrame, sin re-render por fotograma.
  */
 import { useRef } from "react";
 import { clamp, useAnimatedNumber } from "./animation";
-import { MBUX } from "./theme";
+import { alfa, MBUX } from "./theme";
 
 export interface MetricInlineProps {
   label: string;
@@ -17,12 +22,20 @@ export interface MetricInlineProps {
   unit: string;
   min?: number;
   max: number;
-  /** Valor a partir del cual la barra pasa a rojo. */
+  /** Valor a partir del cual el arco pasa a rojo. */
   danger?: number;
   decimals?: number;
-  /** Icono SVG inline, sobre el número. */
+  /** Icono SVG inline, dentro del arco. */
   icon?: React.ReactNode;
+  /** Diámetro del arco en píxeles. */
+  size?: number;
 }
+
+/** Barrido del arco en grados: abierto por abajo, como un reloj de coche. */
+const BARRIDO = 250;
+const RADIO = 44;
+const CIRCUNFERENCIA = 2 * Math.PI * RADIO;
+const LARGO = (BARRIDO / 360) * CIRCUNFERENCIA;
 
 export function MetricInline({
   label,
@@ -33,45 +46,77 @@ export function MetricInline({
   danger,
   decimals = 0,
   icon,
+  size = 64,
 }: MetricInlineProps) {
   const numeroRef = useRef<HTMLSpanElement>(null);
-  const barraRef = useRef<HTMLSpanElement>(null);
+  const arcoRef = useRef<SVGCircleElement>(null);
 
   useAnimatedNumber(value, (v) => {
     if (numeroRef.current) numeroRef.current.textContent = v.toFixed(decimals);
-    if (barraRef.current) {
-      barraRef.current.style.width = `${clamp(((v - min) / (max - min)) * 100, 0, 100)}%`;
-      barraRef.current.style.background =
-        danger !== undefined && v >= danger ? MBUX.danger : MBUX.accent;
+    if (arcoRef.current) {
+      const t = clamp((v - min) / (max - min), 0, 1);
+      const rojo = danger !== undefined && v >= danger;
+      arcoRef.current.setAttribute("stroke-dasharray", `${LARGO * t} ${CIRCUNFERENCIA}`);
+      arcoRef.current.setAttribute("stroke", rojo ? MBUX.danger : MBUX.accent);
     }
   });
 
   return (
-    <div className="flex min-w-0 flex-col items-center gap-1">
-      {icon ? <span className="text-accent">{icon}</span> : null}
+    <div className="flex min-w-0 flex-col items-center">
+      <div className="relative shrink-0" style={{ width: size, height: size }}>
+        {/* El arco se gira para que el hueco quede abajo y centrado. */}
+        <svg viewBox="0 0 100 100" className="h-full w-full" style={{ rotate: "125deg" }}>
+          <circle
+            cx="50"
+            cy="50"
+            r={RADIO}
+            fill="none"
+            stroke={MBUX.track}
+            strokeWidth="7"
+            strokeLinecap="round"
+            strokeDasharray={`${LARGO} ${CIRCUNFERENCIA}`}
+          />
+          <circle
+            ref={arcoRef}
+            cx="50"
+            cy="50"
+            r={RADIO}
+            fill="none"
+            stroke={MBUX.accent}
+            strokeWidth="7"
+            strokeLinecap="round"
+            strokeDasharray={`0 ${CIRCUNFERENCIA}`}
+            style={{ filter: `drop-shadow(0 0 5px ${alfa("accent", 0.45)})` }}
+          />
+        </svg>
 
-      <span className="flex items-baseline gap-1">
+        {icon ? (
+          <span className="absolute inset-0 flex items-center justify-center text-silver">
+            {icon}
+          </span>
+        ) : null}
+      </div>
+
+      <span className="mt-0.5 flex items-baseline gap-1">
         <span
           ref={numeroRef}
           className="font-medium leading-none text-silver"
-          style={{ fontSize: 26, fontVariantNumeric: "tabular-nums" }}
+          style={{ fontSize: 24, fontVariantNumeric: "tabular-nums" }}
         >
           {value.toFixed(decimals)}
         </span>
         <span className="text-[11px] text-muted">{unit}</span>
       </span>
 
-      <span className="max-w-full truncate text-[10px] font-semibold uppercase tracking-[0.06em] text-muted">
+      <span className="mt-1 max-w-full truncate text-[10px] font-semibold uppercase tracking-[0.06em] text-muted">
         {label}
       </span>
 
-      <span className="h-[3px] w-full overflow-hidden rounded-full bg-muted/25">
-        <span
-          ref={barraRef}
-          className="block h-full rounded-full"
-          style={{ width: 0, background: MBUX.accent }}
-        />
-      </span>
+      {/* Subrayado corto: cierra el bloque y lo separa del de al lado. */}
+      <span
+        className="mt-1 h-[2px] w-8 rounded-full"
+        style={{ background: alfa("accent", 0.55) }}
+      />
     </div>
   );
 }

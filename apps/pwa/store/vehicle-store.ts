@@ -158,7 +158,9 @@ export const useVehicleStore = create<VehicleStore>((set, get) => ({
   wsUrl: DEFAULT_WS_URL,
   authToken: "",
   vehicleId: VEHICLE_ID,
-  carView: "top",
+  // El 3D es la vista por defecto: el modelo real llena el centro del
+  // cuadro, que con el pictograma cenital quedaba medio vacío.
+  carView: "3d",
 
   async boot() {
     try {
@@ -171,7 +173,7 @@ export const useVehicleStore = create<VehicleStore>((set, get) => ({
           wsUrl: saved.wsUrl,
           authToken: saved.authToken ?? "",
           vehicleId: saved.vehicleId || VEHICLE_ID,
-          carView: saved.carView ?? "top",
+          carView: saved.carView ?? "3d",
           // El envío se rearma tras conectar, no antes (necesita provider).
           telemetryEnabled: false,
         });

@@ -27,6 +27,14 @@ export function RpmGauge({ rpm, max = 7000, redline = 5500, size = 300 }: RpmGau
       zones={[{ from: redline, to: max, color: MBUX.danger }]}
       tickStep={1000}
       tickLabel={(v) => String(v / 1000)}
+      // Millar con punto, como el cuadro original: 2.300 se lee de un vistazo
+      // y 2300 no.
+      format={(v) => {
+        const n = Math.round(v);
+        return n >= 1000
+          ? `${Math.floor(n / 1000)}.${String(n % 1000).padStart(3, "0")}`
+          : String(n);
+      }}
     />
   );
 }

@@ -3,10 +3,9 @@
 /**
  * Envoltorio perezoso de VehicleModel3D.
  *
- * three.js pesa cerca de medio megabyte de JavaScript y solo hace falta si el
- * conductor elige la vista 3D, que no es la de por defecto. Con `next/dynamic`
- * y `ssr: false` el bundle inicial del cockpit no lo arrastra: se descarga en
- * un chunk aparte la primera vez que se conmuta la vista.
+ * three.js pesa cerca de medio megabyte de JavaScript. Con `next/dynamic` y
+ * `ssr: false` el bundle inicial del cockpit no lo arrastra: se descarga en un
+ * chunk aparte, después de que la primera pantalla ya esté en pie.
  *
  * `ssr: false` además es obligatorio: el componente toca `window`, `document`
  * y WebGL en el montaje.

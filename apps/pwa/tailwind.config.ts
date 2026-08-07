@@ -10,6 +10,10 @@ const config: Config = {
     "./components/**/*.{ts,tsx}",
     "./store/**/*.{ts,tsx}",
     "./lib/**/*.{ts,tsx}",
+    // Sin esto Tailwind no genera las clases que solo aparecen dentro del
+    // paquete de componentes: los paneles salían sin padding y las
+    // insignias sin ancho mínimo, y costó ver por qué.
+    "../../packages/ui/src/**/*.{ts,tsx}",
   ],
   theme: {
     extend: {

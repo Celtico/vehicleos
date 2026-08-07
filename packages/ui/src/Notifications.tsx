@@ -1,8 +1,9 @@
 /**
  * Notifications — avisos tipo "toast" del cockpit.
  *
- * Pila en la esquina superior derecha con entrada y salida animadas por CSS
- * (deslizamiento + fundido), icono e halo por severidad y cierre accesible.
+ * Pila centrada en pantalla, con entrada y salida animadas
+ * por CSS (deslizamiento + fundido), icono e halo por severidad y cierre
+ * accesible.
  * Los avisos críticos laten suavemente y nunca se autocierran: los descarta
  * el conductor.
  *
@@ -101,12 +102,12 @@ function Icono({ severity, color }: { severity: NotificationSeverity; color: str
  */
 const CSS = `
 @keyframes vos-notif-entrada {
-  from { opacity: 0; transform: translateX(28px) scale(0.97); }
-  to   { opacity: 1; transform: translateX(0) scale(1); }
+  from { opacity: 0; transform: translateY(16px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 @keyframes vos-notif-salida {
-  from { opacity: 1; transform: translateX(0) scale(1); max-height: 200px; }
-  to   { opacity: 0; transform: translateX(28px) scale(0.97); max-height: 0; }
+  from { opacity: 1; transform: translateY(0) scale(1); max-height: 200px; }
+  to   { opacity: 0; transform: translateY(16px) scale(0.97); max-height: 0; }
 }
 @keyframes vos-notif-latido {
   0%, 100% { box-shadow: 0 8px 30px rgba(0,0,0,0.5), 0 0 0 1px var(--vos-notif-color), 0 0 26px -4px var(--vos-notif-color); }
@@ -277,14 +278,20 @@ export function NotificationStack({
   return (
     <div
       style={{
+        // Al centro de la pantalla, como el cuadro de un coche de verdad.
+        // Arriba a la derecha tapaba las magnitudes vivas y el reloj; abajo
+        // tapaba justo el panel de averías del que habla el aviso. En el
+        // centro sólo se superpone al dibujo del coche, y no oculta ni un
+        // número.
         position: "fixed",
-        top: 18,
-        right: 18,
+        top: "50%",
+        left: "50%",
+        transform: "translate(-50%, -50%)",
         zIndex: 900,
         display: "flex",
         flexDirection: "column",
         gap: 10,
-        width: 340,
+        width: 380,
         maxWidth: "calc(100vw - 36px)",
         pointerEvents: "none",
         fontFamily: MBUX.font,

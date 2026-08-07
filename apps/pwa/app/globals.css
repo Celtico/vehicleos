@@ -40,6 +40,9 @@
   --car-3: #162126;
   --car-4: #1a272c;
   --car-5: #28373d;
+  /* Silueta del pictograma: opaca a propósito. Dos capas translúcidas
+     superpuestas (carrocería + techo) oscurecían el habitáculo. */
+  --car-icono: #9eafb7;
 }
 
 /*
@@ -75,6 +78,7 @@
   --car-3: #1f334c;
   --car-4: #26405e;
   --car-5: #345474;
+  --car-icono: #26405e;
 }
 
 /* Cockpit a pantalla completa con tipografía fina. */
