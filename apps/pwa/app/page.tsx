@@ -343,7 +343,7 @@ export default function DashboardPage() {
       {/* ── Fila inferior: averías · testigos · viaje ─────────── */}
       {/* El coche no se repite aquí: el de arriba ya resalta la pieza
           averiada, y dibujarlo dos veces era enseñar lo mismo dos veces. */}
-      <div className="grid h-[142px] shrink-0 grid-cols-[1.2fr_1.35fr_1.55fr] gap-6">
+      <div className="grid h-[152px] shrink-0 grid-cols-[1.2fr_1.35fr_1.55fr] gap-6">
         <FaultPanel
           plain
           faults={faults}
@@ -354,7 +354,7 @@ export default function DashboardPage() {
         {/* Los tres bloques arrancan con rótulo a la misma altura. Sin él,
             la fila se leía como una cosa etiquetada y dos flotando. */}
         <div className="flex flex-col px-1">
-          <span className="mb-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-muted">
+          <span className="mb-4 text-[11px] font-semibold uppercase tracking-[0.1em] text-muted">
             Sistemas
           </span>
           <div className="flex items-start justify-around">
@@ -366,7 +366,7 @@ export default function DashboardPage() {
         </div>
 
         <div className="flex flex-col px-1">
-          <span className="mb-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-muted">
+          <span className="mb-4 text-[11px] font-semibold uppercase tracking-[0.1em] text-muted">
             Viaje actual
           </span>
           <div className="grid grid-cols-4 items-start">

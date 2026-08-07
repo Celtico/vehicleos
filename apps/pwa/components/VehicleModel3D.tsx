@@ -659,7 +659,7 @@ export function VehicleModel3D({
     const hdri = crearEntornoEstudio();
     const entorno = pmrem.fromEquirectangular(hdri).texture;
     scene.environment = entorno;
-    scene.environmentIntensity = 1.1;
+    scene.environmentIntensity = 0.95;
     hdri.dispose();
 
     /* --- Luces ---------------------------------------------------------- */
@@ -679,7 +679,7 @@ export function VehicleModel3D({
 
     // Contraluz: es lo único que despega una carrocería negra de un fondo
     // negro, así que aquí se sube en lugar de bajar.
-    const contra = new THREE.DirectionalLight(0xbfe6ff, 1.45);
+    const contra = new THREE.DirectionalLight(0xbfe6ff, 0.85);
     contra.position.set(-1.5, 3, -6);
     scene.add(contra);
 
