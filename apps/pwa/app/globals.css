@@ -135,6 +135,22 @@ body {
 }
 
 /*
+ * Encaje de los datos que cuelgan de los relojes (limitador, consumo).
+ *
+ * Sin borde y con el fondo desvaneciéndose hacia abajo: una píldora con
+ * contorno duro convierte el dato en un botón y compite con el reloj que
+ * tiene justo encima. Así parece parte del mismo instrumento.
+ */
+.encaje-suave {
+  border: 0;
+  background: linear-gradient(
+    to bottom,
+    rgb(var(--c-panel) / calc(var(--c-panel-a) * 1.9)),
+    rgb(var(--c-panel) / calc(var(--c-panel-a) * 0.35))
+  );
+}
+
+/*
  * Filete separador que se desvanece por los extremos.
  *
  * Una línea de borde a borde corta la composición en cajas; ésta solo marca

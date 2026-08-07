@@ -167,17 +167,21 @@ export default function DashboardPage() {
         {/* Velocímetro, con el limitador debajo */}
         <div className="flex shrink-0 flex-col items-center justify-center gap-1.5">
           <SpeedGauge speed={t?.speed ?? 0} size={300} max={DEFAULT_PROFILE.maxSpeed} />
-          <div className="panel-cockpit flex items-center gap-2 rounded-xl px-3 py-1.5">
-            <svg viewBox="0 0 24 24" className="h-4 w-4 text-accent" {...trazo}>
+          <div className="encaje-suave flex items-center gap-3 rounded-xl px-4 py-1.5">
+            <svg viewBox="0 0 24 24" className="h-6 w-6 shrink-0 text-accent" {...trazo}>
               <circle cx="12" cy="13.5" r="7" />
               <path d="M12 10v3.5l2.2 1.2M9.5 3.5h5" />
             </svg>
-            <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-accent">
-              Limitador
-            </span>
-            <span className="text-sm font-semibold tabular-nums text-silver">
-              {LIMITADOR_KMH}
-              <span className="ml-1 text-[10px] font-normal text-muted">km/h</span>
+            <span className="flex flex-col leading-tight">
+              <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-accent">
+                Limitador
+              </span>
+              <span className="flex items-baseline gap-1">
+                <span className="text-lg font-bold tabular-nums text-silver">
+                  {LIMITADOR_KMH}
+                </span>
+                <span className="text-[10px] text-muted">km/h</span>
+              </span>
             </span>
           </div>
         </div>
@@ -317,17 +321,19 @@ export default function DashboardPage() {
             max={DEFAULT_PROFILE.maxRpm}
             redline={DEFAULT_PROFILE.redlineRpm}
           />
-          <div className="panel-cockpit flex items-center gap-2 rounded-xl px-3 py-1.5">
-            <svg viewBox="0 0 24 24" className="h-4 w-4 text-accent" {...trazo}>
+          <div className="encaje-suave flex items-center gap-3 rounded-xl px-4 py-1.5">
+            <svg viewBox="0 0 24 24" className="h-6 w-6 shrink-0 text-accent" {...trazo}>
               <path d="M5 20V5a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v15M3.5 20h11M13 10.5h3a2 2 0 0 1 2 2v3.5a1.5 1.5 0 0 0 3 0V9l-2.5-2.5" />
             </svg>
-            <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-accent">
-              Consumo
-            </span>
-            <span className="text-sm font-semibold tabular-nums text-silver">
-              {fmt(instantaneo.valor, 1)}
-              <span className="ml-1 text-[10px] font-normal text-muted">
-                {instantaneo.unidad}
+            <span className="flex flex-col leading-tight">
+              <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-accent">
+                Consumo
+              </span>
+              <span className="flex items-baseline gap-1">
+                <span className="text-lg font-bold tabular-nums text-silver">
+                  {fmt(instantaneo.valor, 1)}
+                </span>
+                <span className="text-[10px] text-muted">{instantaneo.unidad}</span>
               </span>
             </span>
           </div>
