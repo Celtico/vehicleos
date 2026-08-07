@@ -1,152 +1,160 @@
 # Publicar VehicleOS con Nginx Proxy Manager
 
-Guía paso a paso para el reparto de dominios de VehicleOS en NPM.
+Guía del despliegue real, con los tres nombres que hay montados y
+verificados en producción.
 
-## Por qué dos nombres
+## Reparto de nombres
 
-Hacen falta dos, y **pueden ser subdominios del mismo dominio**:
+| Nombre                     | Destino             | Qué sirve       |
+| -------------------------- | ------------------- | --------------- |
+| `coche.serverscel.com`     | `192.168.1.55:7271` | Cockpit (PWA)   |
+| `coche-api.serverscel.com` | `192.168.1.55:7272` | API y WebSocket |
+| `vehicleos.serverscel.com` | `192.168.1.55:7270` | Landing         |
 
-| Nombre                     | Qué sirve                        |
-| -------------------------- | -------------------------------- |
-| `coche.serverscel.com`     | Cockpit (raíz) y API bajo `/api` |
-| `vehicleos.serverscel.com` | Landing                          |
+Son tres subdominios del **mismo dominio**, así que basta con un dominio
+comprado y el comodín de DNS que ya tienes.
 
-El cockpit ocupa la **raíz** de su dominio porque es una PWA: el service
+El cockpit ocupa la **raíz** de su nombre porque es una PWA: el service
 worker toma como alcance la carpeta desde la que se sirve, y tanto el
 `start_url` del manifiesto como el diálogo de instalación se complican si
-cuelga de un subdirectorio. La landing no tiene esa exigencia, así que es
-la que se muda a otro nombre.
+cuelga de un subdirectorio.
 
-Que la API viva bajo `/api` del **mismo** dominio que el cockpit no es un
-capricho: al compartir origen desaparece el CORS, que es la causa más
-habitual de que un despliegue deje de funcionar sin motivo aparente.
+La API tiene nombre propio. La alternativa era colgarla de `/api` del mismo
+nombre que el cockpit —lo que elimina el CORS por ser el mismo origen—
+mediante una _custom location_ de NPM, pero en la práctica dio problemas y
+se descartó. Con nombres separados el CORS sí interviene, y por eso
+`CORS_ORIGIN` tiene que ser exacto.
 
-## Antes de empezar
+**La API conserva el prefijo `/api` aunque tenga subdominio propio**: sus
+rutas viven en `https://coche-api.serverscel.com/api/…`. Es el valor de
+`API_PREFIX` en el servidor, y hay que mantenerlo alineado con
+`PUBLIC_API_URL` y `PUBLIC_SOCKET_PATH`.
 
-En el `.env` del servidor:
+## Variables del servidor
+
+En el `.env` que acompaña al `docker-compose.yml`:
 
 ```bash
 API_PREFIX=/api
 CORS_ORIGIN=https://coche.serverscel.com
-PUBLIC_API_URL=https://coche.serverscel.com/api
-PUBLIC_WS_URL=https://coche.serverscel.com
+PUBLIC_API_URL=https://coche-api.serverscel.com/api
+PUBLIC_WS_URL=https://coche-api.serverscel.com
 PUBLIC_SOCKET_PATH=/api/socket.io
 ```
 
-**El backend sirve ya bajo `/api`** gracias a `API_PREFIX`. Eso es
-deliberado: las _custom locations_ de NPM reenvían la ruta tal cual, sin
-quitar el prefijo, así que hacerlo en el servidor evita tener que escribir
-reglas de reescritura en las cajas de configuración avanzada, que es justo
-donde se cuelan los errores difíciles de ver.
-
-Y recuerda: `PUBLIC_*` se incrusta en el JavaScript durante la compilación,
-así que después de cambiarlas hay que reconstruir el cockpit:
+Las tres `PUBLIC_*` **se incrustan en el JavaScript durante la
+compilación**, no se leen al arrancar. Después de cambiarlas hay que
+reconstruir el cockpit:
 
 ```bash
 docker compose up -d --build pwa
 ```
 
-## Host 1 — cockpit y API
+Es el fallo más habitual: se cambia el `.env`, se reinicia, y el navegador
+sigue pidiendo a la dirección antigua porque está escrita dentro del
+paquete.
 
-**Hosts → Proxy Hosts → Add Proxy Host**
+## Los tres hosts en NPM
 
-Pestaña **Details**:
+**Hosts → Proxy Hosts → Add Proxy Host** para cada uno.
+
+### Cockpit
 
 - Domain Names: `coche.serverscel.com`
-- Scheme: `http`
-- Forward Hostname / IP: la IP del servidor donde corre Docker
-- Forward Port: `7271` (el cockpit)
-- **Websockets Support: activado**
+- Forward: `http` → `192.168.1.55` : `7271`
 - Block Common Exploits: activado
+- SSL: certificado de Let's Encrypt, HTTP/2 activado
 
-Pestaña **Custom locations** → _Add location_:
-
-- Location: `/api`
-- Scheme: `http`
-- Forward Hostname / IP: la misma IP
-- Forward Port: `7272` (el backend)
-
-Y en el engranaje de esa misma location, pega esto:
+En la pestaña **Advanced**, para que un despliegue nuevo llegue a las
+pantallas ya instaladas en vez de tardar días:
 
 ```nginx
-# La telemetría mantiene el WebSocket abierto durante horas; con el valor
-# por defecto el proxy lo corta cada minuto y el cliente reconecta sin parar.
-proxy_read_timeout 3600s;
-proxy_send_timeout 3600s;
-proxy_buffering off;
-
-proxy_http_version 1.1;
-proxy_set_header Upgrade $http_upgrade;
-proxy_set_header Connection "upgrade";
-```
-
-Pestaña **Advanced** del host:
-
-```nginx
-# El service worker no debe cachearse: si se cachea, un despliegue nuevo
-# tarda días en llegar a las pantallas que ya lo tienen instalado.
 location = /sw.js {
-    proxy_pass http://IP_DEL_SERVIDOR:7271/sw.js;
+    proxy_pass http://192.168.1.55:7271/sw.js;
     add_header Cache-Control "no-cache, no-store, must-revalidate";
 }
 ```
 
-Pestaña **SSL**: certificado nuevo de Let's Encrypt y _HTTP/2 Support_
-activado.
+### API
 
-**Force SSL, desactivado.** Si delante de NPM hay otro proxy que ya termina
-el TLS y reenvía en HTTP (Cloudflare en modo Flexible, por ejemplo),
-activarlo provoca un bucle infinito de redirecciones: el proxy exterior
-manda la petición en HTTP, NPM responde "redirige a HTTPS", y vuelta a
-empezar.
+- Domain Names: `coche-api.serverscel.com`
+- Forward: `http` → `192.168.1.55` : `7272`
+- **Websockets Support: activado** (sin esto no hay telemetría)
+- Block Common Exploits: activado
+- SSL: certificado de Let's Encrypt, HTTP/2 activado
 
-## Host 2 — landing
+En **Advanced**, porque una pantalla de coche mantiene el WebSocket abierto
+durante horas y con el valor por defecto el proxy lo corta cada minuto:
 
-**Add Proxy Host**, mucho más simple:
+```nginx
+proxy_read_timeout 3600s;
+proxy_send_timeout 3600s;
+proxy_buffering off;
+```
+
+### Landing
 
 - Domain Names: `vehicleos.serverscel.com`
-- Forward Hostname / IP: la IP del servidor
-- Forward Port: `7270`
+- Forward: `http` → `192.168.1.55` : `7270`
 - Block Common Exploits: activado
-- SSL: certificado de Let's Encrypt, sin Force SSL (mismo motivo que arriba)
+- SSL: certificado de Let's Encrypt
 
-No necesita websockets ni locations adicionales.
+No necesita websockets ni configuración adicional.
+
+## Force SSL: desactivado
+
+En los tres. Si delante de NPM hay otro proxy que ya termina el TLS y
+reenvía en HTTP —Cloudflare en modo Flexible, por ejemplo—, activarlo
+provoca un **bucle infinito de redirecciones**: el proxy exterior manda la
+petición en HTTP, NPM responde "redirige a HTTPS", y vuelta a empezar.
 
 ## Comprobación
 
 ```bash
-# El cockpit responde en la raíz
+# Cockpit y landing
 curl -sI https://coche.serverscel.com | head -1
-
-# La API responde bajo /api (401 es correcto: es una ruta protegida)
-curl -s -o /dev/null -w "%{http_code}\n" https://coche.serverscel.com/api/users/me
-
-# La landing
 curl -sI https://vehicleos.serverscel.com | head -1
+
+# API: 401 es la respuesta CORRECTA, es una ruta protegida
+curl -s -o /dev/null -w "%{http_code}\n" \
+  https://coche-api.serverscel.com/api/users/me
+
+# socket.io debe devolver un sid y anunciar que puede subir a websocket
+curl -s "https://coche-api.serverscel.com/api/socket.io/?EIO=4&transport=polling" | head -c 80
+
+# CORS: debe responder con el origen del cockpit
+curl -s -D - -o /dev/null -X OPTIONS \
+  https://coche-api.serverscel.com/api/auth/login \
+  -H "Origin: https://coche.serverscel.com" \
+  -H "Access-Control-Request-Method: POST" | grep -i access-control-allow-origin
 ```
 
-Para el WebSocket, abre el cockpit, ve a **Ajustes**, pega el token y el id
-del vehículo, activa el envío de telemetría y comprueba que el estado del
-enlace pasa a "abierto". Si se queda reconectando, casi siempre es una de
-estas tres:
+La prueba de fuego: abre el cockpit, ve a **Ajustes**, pega un token y el id
+de un vehículo, activa el envío de telemetría y comprueba que el estado del
+enlace pasa a "abierto".
 
-1. **Websockets Support** desactivado en el host del cockpit.
-2. `PUBLIC_SOCKET_PATH` no coincide con `API_PREFIX` + `/socket.io`.
-3. El cockpit no se reconstruyó tras cambiar las variables `PUBLIC_*`.
+## Cuando algo no va
 
-## Si falla la emisión del certificado
+**El cockpit no puede iniciar sesión.** Casi siempre es `PUBLIC_API_URL`
+apuntando mal, o la imagen sin reconstruir tras cambiarla. Mira en las
+herramientas de desarrollo a qué dirección está pidiendo.
 
-NPM muestra un escueto "Internal Error" y crea el host igualmente, pero con
-SSL en "HTTP only". El host funciona; solo falta el certificado.
+**El navegador bloquea las peticiones por CORS.** `CORS_ORIGIN` tiene que
+coincidir **exactamente** con el origen del cockpit, incluido el esquema y
+sin barra final.
 
-Let's Encrypt valida por HTTP-01 conectándose desde internet a
-`http://TU_DOMINIO/.well-known/acme-challenge/…`, así que necesita que ese
-nombre sea alcanzable desde fuera. Si tu red no lo permite, usa **Use a DNS
-Challenge** con el proveedor de tu DNS y su token de API: valida creando un
-registro TXT, sin ninguna conexión entrante.
+**El WebSocket reconecta sin parar.** Revisa que _Websockets Support_ esté
+activado en el host de la API, que `PUBLIC_SOCKET_PATH` sea `API_PREFIX` +
+`/socket.io`, y que estén puestos los timeouts largos.
 
-Para añadir el certificado después, entra en el menú de tres puntos del
-host → Edit → SSL → "Request a new SSL Certificate".
+**Falla la emisión del certificado.** NPM muestra un escueto "Internal
+Error" y **crea el host igualmente**, pero con SSL en "HTTP only": el host
+funciona, solo le falta el certificado. Let's Encrypt valida por HTTP-01
+conectándose desde internet a
+`http://TU_DOMINIO/.well-known/acme-challenge/…`, así que ese nombre debe
+ser alcanzable desde fuera y resolver correctamente también dentro de la
+LAN. Para añadir el certificado después: menú de tres puntos del host →
+Edit → SSL → "Request a new SSL Certificate".
 
 ## Si no usas NPM
 

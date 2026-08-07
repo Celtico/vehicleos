@@ -9,18 +9,20 @@
 # cualquier usuario).
 #
 #   ./scripts/preparar-env.sh
-#   ./scripts/preparar-env.sh coche.serverscel.com vehicleos.serverscel.com
+#   ./scripts/preparar-env.sh coche.serverscel.com coche-api.serverscel.com \
+#                             vehicleos.serverscel.com
 #
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
 DOMINIO_APP="${1:-coche.serverscel.com}"
-DOMINIO_LANDING="${2:-vehicleos.serverscel.com}"
+DOMINIO_API="${2:-coche-api.serverscel.com}"
+DOMINIO_LANDING="${3:-vehicleos.serverscel.com}"
 
 if [ -f .env ]; then
   echo "Ya existe un .env. No se toca: si quieres regenerarlo, muévelo antes."
-  echo "   mv .env .env.viejo && $0 $DOMINIO_APP $DOMINIO_LANDING"
+  echo "   mv .env .env.viejo && $0 $DOMINIO_APP $DOMINIO_API $DOMINIO_LANDING"
   exit 1
 fi
 
@@ -49,8 +51,8 @@ CORS_ORIGIN=https://$DOMINIO_APP
 ANTHROPIC_API_KEY=
 
 # ── URL públicas (se incrustan en el build del cockpit) ─────────────
-PUBLIC_API_URL=https://$DOMINIO_APP/api
-PUBLIC_WS_URL=https://$DOMINIO_APP
+PUBLIC_API_URL=https://$DOMINIO_API/api
+PUBLIC_WS_URL=https://$DOMINIO_API
 PUBLIC_SOCKET_PATH=/api/socket.io
 
 # ── Puertos publicados ──────────────────────────────────────────────
@@ -64,6 +66,7 @@ chmod 600 .env
 echo "Listo. .env creado con permisos 600 y secretos generados."
 echo
 echo "  Cockpit : https://$DOMINIO_APP"
+echo "  API     : https://$DOMINIO_API/api"
 echo "  Landing : https://$DOMINIO_LANDING"
 echo
 echo "Comprueba que los puertos están libres antes de levantar:"

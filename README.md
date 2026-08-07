@@ -54,21 +54,26 @@ así que un despliegue nuevo no necesita pasos manuales.
 
 ### Detrás de un proxy con dominio propio
 
-Hacen falta **dos nombres**, y solo por un motivo: el cockpit es una PWA y
-quiere la raíz de su dominio, porque el service worker toma como alcance la
-carpeta desde la que se sirve y la instalación desde un subdirectorio da
-problemas. La landing, que no tiene esa exigencia, va en otro nombre.
+Tres subdominios del mismo dominio, uno por servicio:
 
 ```
-coche.tudominio.com/          → cockpit (PWA)
-coche.tudominio.com/api/      → backend y WebSocket
-vehicleos.tudominio.com/      → landing
+coche.serverscel.com       → cockpit (PWA)
+coche-api.serverscel.com   → API y WebSocket
+vehicleos.serverscel.com   → landing
 ```
 
-Ambos pueden ser subdominios del mismo dominio comprado. Poner la API bajo
-`/api` del mismo origen que el cockpit **elimina el CORS por completo**, que
-es la causa más habitual de que un despliegue deje de funcionar. Tienes un
-ejemplo de nginx listo para adaptar en
+El cockpit ocupa la raíz de su nombre porque es una PWA: el service worker
+toma como alcance la carpeta desde la que se sirve. La API tiene nombre
+propio y conserva el prefijo `/api`, así que sus rutas viven en
+`https://coche-api.serverscel.com/api/…`.
+
+Como cockpit y API están en orígenes distintos, el CORS interviene y
+`CORS_ORIGIN` debe coincidir exactamente con el origen del cockpit.
+
+Guía completa para Nginx Proxy Manager, con los ajustes que necesita el
+WebSocket y los fallos habituales, en
+[`docs/nginx-proxy-manager.md`](docs/nginx-proxy-manager.md). El
+equivalente en nginx a pelo, en
 [`docker/proxy.example.conf`](docker/proxy.example.conf).
 
 Dos cosas que suelen dar problemas y conviene saber de antemano:
