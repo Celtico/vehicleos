@@ -7,6 +7,7 @@ import "./globals.css";
 import { Clock } from "../components/Clock";
 import { CockpitNotifications } from "../components/CockpitNotifications";
 import { DaylightMode } from "../components/DaylightMode";
+import { ThemeSwitch } from "../components/ThemeSwitch";
 import { ConnectionBadge } from "../components/ConnectionBadge";
 import { Providers } from "../components/Providers";
 import { ServiceWorkerRegister } from "../components/ServiceWorkerRegister";
@@ -51,7 +52,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <span className="text-[11px] uppercase tracking-[0.35em] text-muted">
                   VehicleOS
                 </span>
-                <div className="flex items-center gap-6">
+                <div className="flex items-center gap-5">
+                  <ThemeSwitch />
                   <ConnectionBadge />
                   <Clock />
                 </div>

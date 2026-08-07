@@ -17,6 +17,7 @@
 import { useEffect } from "react";
 import { daylightAt, type Daylight } from "@vehicleos/shared";
 import { useVehicleStore } from "../store/vehicle-store";
+import { getThemeMode, subscribeThemeMode, type ThemeMode } from "../lib/theme-mode";
 
 /** Cada cuánto se recomprueba. El sol no corre: basta con un minuto. */
 const REFRESCO_MS = 60_000;
@@ -40,13 +41,23 @@ export function DaylightMode() {
       ? { lat: Number(zona.split(",")[0]), lon: Number(zona.split(",")[1]) }
       : undefined;
 
-    const aplicar = () => {
+    /** El modo manual manda; "auto" delega en el cálculo solar. */
+    const aplicar = (modo: ThemeMode = getThemeMode()) => {
+      if (modo !== "auto") {
+        document.documentElement.dataset.tema = modo;
+        return;
+      }
       const tema: Daylight = daylightAt(pos);
       document.documentElement.dataset.tema = tema === "day" ? "dia" : "noche";
     };
+
     aplicar();
-    const id = setInterval(aplicar, REFRESCO_MS);
-    return () => clearInterval(id);
+    const id = setInterval(() => aplicar(), REFRESCO_MS);
+    const baja = subscribeThemeMode(aplicar);
+    return () => {
+      clearInterval(id);
+      baja();
+    };
   }, [zona]);
 
   return null;

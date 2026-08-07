@@ -37,3 +37,5 @@ export { WheelBadge, type WheelBadgeProps } from "./WheelBadge";
 export { MetricCard, type MetricCardProps } from "./MetricCard";
 export { FaultPanel, type FaultPanelProps, type FaultItem } from "./FaultPanel";
 export { InfoList, type InfoListProps, type InfoRow } from "./InfoList";
+export { RingGauge, type RingGaugeProps } from "./RingGauge";
+export { MetricInline, type MetricInlineProps } from "./MetricInline";
