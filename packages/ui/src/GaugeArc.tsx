@@ -26,9 +26,9 @@ const R_BISEL = 96;
 const R_ZONA = 90;
 const R_ARCO = 90;
 const R_MARCA_FUERA = 80;
-const R_MARCA_MAYOR = 69;
+const R_MARCA_MAYOR = 73;
 const R_MARCA_MENOR = 75;
-const R_ROTULO = 62;
+const R_ROTULO = 60;
 
 export interface GaugeArcProps {
   /** Último valor recibido (objetivo de la animación). */
@@ -257,7 +257,7 @@ export function GaugeArc({
             y1={p1.y}
             x2={p2.x}
             y2={p2.y}
-            stroke={alfa("muted", 0.45)}
+            stroke={alfa("muted", 0.3)}
             strokeWidth={1}
           />
         );
@@ -275,8 +275,8 @@ export function GaugeArc({
               y1={p1.y}
               x2={p2.x}
               y2={p2.y}
-              stroke={MBUX.silver}
-              strokeWidth={1.8}
+              stroke={alfa("silver", 0.55)}
+              strokeWidth={1.6}
             />
             <text
               x={pt.x}
