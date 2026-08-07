@@ -87,31 +87,13 @@ const LARGO_OBJETIVO = 4;
 /** Encuadre: campo de visión y elevación de la cámara sobre el suelo. */
 const FOV = 26;
 const ELEVACION = THREE.MathUtils.degToRad(14);
-/**
- * Margen alrededor del coche al calcular la distancia de cámara.
- *
- * Justo el necesario para que no roce el canto. El encuadre ya se calcula
- * para que el coche quepa en CUALQUIER giro, así que un margen generoso
- * encima se traduce en un coche pequeño perdido en un lienzo apaisado.
- */
-const MARGEN_ENCUADRE = 1.0;
+/** Margen alrededor del coche al calcular la distancia de cámara. */
+const MARGEN_ENCUADRE = 1.1;
 
-/**
- * Vista de reposo: tres cuartos largo por el lado del conductor, la misma
- * pose del boceto. Más de frente el coche se encoge en un lienzo que es casi
- * tres veces más ancho que alto y deja medio hueco vacío a cada lado.
- */
-const GIRO_INICIAL = -0.95;
-/**
- * Velocidad de la rotación automática (rad/s).
- *
- * Está a cero a propósito. Un coche dando vueltas solo es un adorno en
- * movimiento en mitad de una pantalla que se mira conduciendo, obliga a
- * repintar sin parar en una tablet que no va sobrada, y hace que la vista
- * casi nunca esté en la pose buena. El conductor puede girarlo arrastrando
- * cuando quiera mirar una pieza concreta.
- */
-const VELOCIDAD_GIRO = 0;
+/** Vista inicial: tres cuartos delantero por el lado del conductor. */
+const GIRO_INICIAL = -0.62;
+/** Velocidad de la rotación automática (rad/s). */
+const VELOCIDAD_GIRO = 0.18;
 
 /** Nombre legible de cada pieza (para el `aria-label`). */
 const ETIQUETAS: Record<VehiclePartId, string> = {
@@ -178,7 +160,7 @@ function resolverColorTema(token: ClaveTema, destino: THREE.Color): THREE.Color 
   ) {
     return destino.setHex(RESPALDO_TEMA[token]);
   }
-  return destino.setRGB(r / 0, g / 0, b / 0, THREE.SRGBColorSpace);
+  return destino.setRGB(r / 255, g / 255, b / 255, THREE.SRGBColorSpace);
 }
 
 /**
@@ -191,12 +173,6 @@ const FUERZA_GRAVEDAD: Record<PartSeverity, number> = {
   warning: 0.8,
   error: 0.92,
 };
-
-/**
- * Calor (0-100) por debajo del cual el capó no se tiñe. Un motor por debajo
- * de la temperatura de servicio no es una anomalía: no hay nada que señalar.
- */
-const UMBRAL_CALOR = 12;
 
 /** Color neutro para apagar un tinte sin reservar un objeto por frame. */
 const NEGRO = new THREE.Color(0x000000);
@@ -293,39 +269,33 @@ function crearEntornoEstudio(): THREE.DataTexture {
 
   const focos: Foco[] = [
     // Softbox cenital muy ancho: el reflejo largo del capó y del techo.
-    { phi: 0, theta: 0.35, anchoPhi: 3.2, anchoTheta: 0.5, intensidad: 8, color: [1, 1, 1] },
-    // Paneles laterales: anchos, pero POR ENCIMA del horizonte.
-    //
-    // Anchos porque un foco pequeño sobre chapa curva y lisa se refleja como
-    // una banda blanca de canto recto —eso hacía que el coche pareciera un
-    // recorte pegado— y un panel grande da un reflejo largo que sigue la
-    // forma. Y altos porque, centrados más abajo, media campana caía bajo el
-    // horizonte: iluminaban el coche desde el suelo y encendían en blanco los
-    // bajos de los neumáticos y el faldón.
+    { phi: 0, theta: 0.32, anchoPhi: 2.4, anchoTheta: 0.24, intensidad: 11, color: [1, 1, 1] },
+    // Luz principal por el lado izquierdo, ligeramente cálida.
     {
       phi: 2.1,
-      theta: 0.72,
-      anchoPhi: 1.3,
-      anchoTheta: 0.5,
-      intensidad: 5,
-      color: [1, 0.97, 0.93],
+      theta: 0.9,
+      anchoPhi: 0.55,
+      anchoTheta: 0.38,
+      intensidad: 7,
+      color: [1, 0.96, 0.9],
     },
+    // Relleno por el lado derecho, frío (acento MBUX).
     {
       phi: 4.4,
-      theta: 0.78,
-      anchoPhi: 1.3,
-      anchoTheta: 0.5,
-      intensidad: 3.2,
-      color: [0.72, 0.95, 1],
-    },
-    // Contraluz trasero, también ancho: recorta la silueta sin dejar filo.
-    {
-      phi: 3.25,
-      theta: 0.62,
-      anchoPhi: 1.0,
+      theta: 1,
+      anchoPhi: 0.65,
       anchoTheta: 0.45,
       intensidad: 3.4,
-      color: [0.88, 0.96, 1],
+      color: [0.55, 0.95, 1],
+    },
+    // Contraluz trasero: recorta la silueta contra el negro del cockpit.
+    {
+      phi: 3.25,
+      theta: 0.6,
+      anchoPhi: 0.5,
+      anchoTheta: 0.32,
+      intensidad: 5,
+      color: [0.85, 0.96, 1],
     },
   ];
 
@@ -361,21 +331,6 @@ function crearEntornoEstudio(): THREE.DataTexture {
         b += aporte * foco.color[2];
       }
 
-      // Corte por debajo del horizonte.
-      //
-      // Los paneles laterales son anchos y su campana gaussiana se derrama
-      // por debajo de θ = π/2. En un estudio real el suelo no emite: ese
-      // derrame iluminaba el coche DESDE ABAJO y dejaba los bajos de los
-      // neumáticos y el faldón encendidos en blanco, que es imposible y se
-      // nota aunque no se sepa por qué.
-      if (theta > Math.PI / 2) {
-        const bajoHorizonte = Math.max(0, 1 - (theta - Math.PI / 2) / (Math.PI / 2));
-        const atenuar = bajoHorizonte * bajoHorizonte * 0.25;
-        r = baseR + (r - baseR) * atenuar;
-        g = baseG + (g - baseG) * atenuar;
-        b = baseB + (b - baseB) * atenuar;
-      }
-
       const i = (y * ANCHO + x) * 4;
       datos[i] = r;
       datos[i + 1] = g;
@@ -402,9 +357,9 @@ function crearTexturaSombra(): THREE.CanvasTexture {
   const ctx = canvas.getContext("2d");
   if (ctx) {
     const grad = ctx.createRadialGradient(LADO / 2, LADO / 2, 0, LADO / 2, LADO / 2, LADO / 2);
-    grad.addColorStop(0, "rgba(0,0,0,1)");
-    grad.addColorStop(0.42, "rgba(0,0,0,0.72)");
-    grad.addColorStop(0.72, "rgba(0,0,0,0.22)");
+    grad.addColorStop(0, "rgba(255,255,255,1)");
+    grad.addColorStop(0.42, "rgba(255,255,255,0.72)");
+    grad.addColorStop(0.72, "rgba(255,255,255,0.22)");
     grad.addColorStop(1, "rgba(255,255,255,0)");
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, LADO, LADO);
@@ -493,69 +448,6 @@ function muestrearSilueta(
   return new Float32Array(salida);
 }
 
-/**
- * Rugosidad mínima de un metal opaco.
- *
- * El .glb exporta las llantas (`EXT_Metal`) con metalness 0,80 y roughness
- * 0,0: un espejo perfecto. Bajo un HDRI de estudio, un espejo devuelve los
- * focos tal cual y la llanta sale como una mancha blanca sin dibujo, en vez
- * del aluminio de una AMG. Cero absoluto no existe en ninguna superficie
- * real; es un artefacto del exportador.
- */
-const RUGOSIDAD_MINIMA_METAL = 0.34;
-
-/** Cuánto entorno reflejan los metales opacos, respecto al resto de la escena. */
-const ENTORNO_METAL = 0.45;
-
-/**
- * Tono del aluminio.
- *
- * El .glb no trae `baseColorFactor` en los metales, así que glTF asume blanco
- * puro y el color acaba saliendo entero de la iluminación: la llanta se
- * pintaba de blanco liso, sin el gris del aluminio que sí tiene el render del
- * autor. Esto es el factor que falta, no un capricho de color.
- */
-const TINTE_ALUMINIO = 0.34;
-
-/** Materiales que se dejan en blanco: son ópticas, y ahí el brillo es el punto. */
-const METALES_SIN_TENIR = ["light", "glass", "mirror"];
-
-/**
- * Sube la rugosidad de los metales opacos que vengan como espejo.
- *
- * No toca cristales ni nada con transmisión o transparencia: ahí el cero sí
- * es correcto. La pintura tampoco entra (metalness 0,28), que es la que da
- * los reflejos largos del capó.
- */
-function suavizarEspejos(mesh: THREE.Mesh): void {
-  for (const m of materialesDe(mesh)) {
-    const fisico = m as THREE.MeshPhysicalMaterial;
-    if (typeof fisico.roughness !== "number" || typeof fisico.metalness !== "number") continue;
-    if (m.transparent || (fisico.transmission ?? 0) > 0) continue;
-    // Umbral bajo a propósito: el exportador ha puesto metalness alto a
-    // TODO, incluido el caucho (0,59) y el plástico (0,56). El trim del
-    // faldón se quedaba en 0,596 y por tanto fuera, y era justo el que salía
-    // como una banda blanca plana pegada al costado del coche.
-    if (fisico.metalness < 0.45) continue;
-    // En un metal el color sale casi entero del entorno reflejado, no del
-    // difuso: subir la rugosidad difumina el reflejo pero no baja el brillo.
-    // Por eso además se le rebaja el entorno, y solo a él: la pintura
-    // (metalness 0,28) conserva sus reflejos largos del capó y del techo.
-    fisico.envMapIntensity = ENTORNO_METAL;
-    if (fisico.roughness < RUGOSIDAD_MINIMA_METAL) {
-      fisico.roughness = RUGOSIDAD_MINIMA_METAL;
-    }
-    const nombre = m.name.toLowerCase();
-    const esOptica = METALES_SIN_TENIR.some((t) => nombre.includes(t));
-    // Solo se tiñe lo que venía en blanco puro: si el autor puso un color,
-    // manda el suyo.
-    if (!esOptica && fisico.color && fisico.color.getHex() === 0xffffff) {
-      fisico.color.setScalar(TINTE_ALUMINIO);
-    }
-    fisico.needsUpdate = true;
-  }
-}
-
 /** Materiales de una malla, normalizados a lista. */
 function materialesDe(mesh: THREE.Mesh): THREE.Material[] {
   return Array.isArray(mesh.material) ? mesh.material : [mesh.material];
@@ -639,9 +531,7 @@ export function VehicleModel3D({
     });
     if (activas.length === 0) return "Vista 3D del vehículo. Ninguna pieza señalada.";
     const nombres = activas.map((p) => ETIQUETAS[p]).join(", ");
-    return `Vista 3D del vehículo. ${
-      activas.length === 1 ? "Avería en" : "Averías en"
-    } ${nombres}.`;
+    return `Vista 3D del vehículo. ${activas.length === 1 ? "Avería en" : "Averías en"} ${nombres}.`;
   }, [parts]);
 
   /* ---------------------------------------------------------------------- */
@@ -651,12 +541,10 @@ export function VehicleModel3D({
     const contenedor = contenedorRef.current;
     if (!contenedor) return;
 
-    // El <canvas> se crea aquí y no en el JSX a propósito. Un canvas solo
-    // admite UN contexto WebGL en toda su vida: si React reutiliza el mismo
-    // elemento entre montajes (StrictMode lo hace en desarrollo), el segundo
-    // getContext devuelve null y three revienta por dentro con un
-    // "Cannot read properties of null". Creando uno nuevo por efecto, cada
-    // montaje empieza limpio.
+    // El <canvas> se crea aquí y no en el JSX: uno solo admite UN contexto
+    // WebGL en toda su vida, así que si React reutiliza el elemento entre
+    // montajes (StrictMode lo hace en desarrollo) el segundo getContext
+    // devuelve null y three revienta por dentro.
     const canvas = document.createElement("canvas");
     canvas.setAttribute("role", "img");
     canvas.className = "block h-full w-full";
@@ -668,10 +556,9 @@ export function VehicleModel3D({
     const sinMovimiento = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     /* --- Renderer ------------------------------------------------------- */
-    // Se intenta de más a menos exigente. Pedir "high-performance" o
-    // antialias no es gratis: hay GPU (y la de una tablet Android barata es
-    // justo de esas) donde esa combinación devuelve un contexto nulo y three
-    // revienta dentro, así que se degrada en vez de rendirse a la primera.
+    // Se intenta de más a menos exigente: pedir "high-performance" o
+    // antialias devuelve un contexto nulo en algunas GPU modestas, y three
+    // revienta por dentro con "Cannot read properties of null".
     const INTENTOS: THREE.WebGLRendererParameters[] = [
       { antialias: true, powerPreference: "high-performance" },
       { antialias: true },
@@ -684,6 +571,11 @@ export function VehicleModel3D({
         renderer = new THREE.WebGLRenderer({
           canvas,
           alpha: true, // fondo transparente: se integra con el negro del cockpit
+          // Conserva lo dibujado entre fotogramas. Por defecto WebGL lo borra
+          // al componer, y esta escena solo se repinta cuando algo cambia: el
+          // coche se quedaba dibujado una vez y cualquier recomposición
+          // dejaba el hueco en negro.
+          preserveDrawingBuffer: true,
           ...opciones,
         });
         break;
@@ -693,11 +585,7 @@ export function VehicleModel3D({
     }
     if (!renderer) {
       canvas.remove();
-      const e = ultimoFallo;
-      // El motivo importa: "no hay WebGL" y "el driver ha fallado al crear el
-      // contexto" se arreglan de forma distinta, y sin el mensaje real no hay
-      // manera de saber cuál de los dos es desde una tablet en el coche.
-      console.error("[VehicleModel3D] no se pudo crear el renderer:", e);
+      console.error("[VehicleModel3D] no se pudo crear el renderer:", ultimoFallo);
       setError("Este dispositivo no puede mostrar la vista 3D.");
       return;
     }
@@ -705,11 +593,7 @@ export function VehicleModel3D({
     renderer.setClearAlpha(0);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    // Exposición: con 1,45 sobre un HDRI de estudio ya fuerte, el cromo de las
-    // llantas y la tapicería clara saturaban a blanco puro y perdían todo el
-    // detalle, mientras la pintura oscura seguía hundida en el fondo. Bajarla
-    // recupera el dibujo de la llanta y del habitáculo.
-    renderer.toneMappingExposure = 1.05;
+    renderer.toneMappingExposure = 1.45;
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(FOV, 1, 0.1, 100);
@@ -721,22 +605,6 @@ export function VehicleModel3D({
       danger: new THREE.Color(),
       ok: new THREE.Color(),
     };
-    /** ¿Manda el tema claro? Lo dice el atributo que pone DaylightMode. */
-    const esDeDia = (): boolean => document.documentElement.dataset.tema === "dia";
-
-    /**
-     * Ajusta la sombra al tema: sobre fondo claro una sombra negra al 70 %
-     * es una mancha, y sobre fondo oscuro apenas se intuye.
-     */
-    const ajustarSueloAlTema = (): void => {
-      const dia = esDeDia();
-      materialSombra.opacity = dia ? 0.42 : 0.7;
-      // El suelo tira del color del fondo de cada tema; si no, de día sería
-      // una mancha oscura y de noche una clara.
-      materialSuelo.color.set(dia ? 0xd7dde0 : 0x1b262b);
-      materialSuelo.opacity = dia ? 0.5 : 0.55;
-    };
-
     const refrescarPaleta = (): void => {
       for (const clave of Object.keys(paleta) as ClaveTema[]) {
         resolverColorTema(clave, paleta[clave]);
@@ -750,27 +618,24 @@ export function VehicleModel3D({
     const hdri = crearEntornoEstudio();
     const entorno = pmrem.fromEquirectangular(hdri).texture;
     scene.environment = entorno;
-    scene.environmentIntensity = 2.1;
+    scene.environmentIntensity = 1.5;
     hdri.dispose();
 
     /* --- Luces ---------------------------------------------------------- */
-    /*
-     * Sin luces direccionales, a propósito.
-     *
-     * Había tres (principal, relleno y contraluz) y entre las tres dejaban
-     * bandas duras y planas sobre el faldón y los pasos de rueda: franjas
-     * claras de borde recto que parecían pegadas encima del coche en vez de
-     * pintura reflejando algo. Un foco puntual sobre chapa curva y lisa hace
-     * eso; la luz de un estudio real llega de superficies grandes.
-     *
-     * Aquí toda la luz viene del entorno (el HDRI de estudio generado por
-     * código, ver `crearEntornoEstudio`), que es como se ilumina un render de
-     * producto: reflejos largos y suaves, sin filos.
-     *
-     * Tampoco hay luz ambiente: una ambiental plana levanta por igual toda
-     * la superficie y aplana el volumen, que es parte de lo que hacía que el
-     * coche pareciera un recorte. Toda la luz de la escena viene del entorno.
-     */
+    const ambiental = new THREE.AmbientLight(0xdfeff2, 0.35);
+    scene.add(ambiental);
+
+    const principal = new THREE.DirectionalLight(0xffffff, 2.2);
+    principal.position.set(4, 6, 5);
+    scene.add(principal);
+
+    const relleno = new THREE.DirectionalLight(paleta.accent.clone(), 0.85);
+    relleno.position.set(-5, 2.5, 3);
+    scene.add(relleno);
+
+    const contra = new THREE.DirectionalLight(0xbfe6ff, 1.1);
+    contra.position.set(-1.5, 3, -6);
+    scene.add(contra);
 
     /* --- Pivote (gira el coche, la cámara se queda quieta) -------------- */
     const pivote = new THREE.Group();
@@ -928,29 +793,24 @@ export function VehicleModel3D({
     sombra.visible = false;
     pivote.add(sombra);
 
-    /*
-     * Suelo.
-     *
-     * Antes aquí había un halo cian, y era una mancha de luz: se veía la
-     * mancha, no un suelo. Este es lo contrario: toma el color del fondo del
-     * cockpit y solo lo separa un punto, con el alfa cayendo a cero mucho
-     * antes del canto del lienzo. No ilumina nada —es MeshBasic— y su único
-     * trabajo es que el coche se apoye en algo en vez de flotar.
-     */
-    const materialSuelo = new THREE.MeshBasicMaterial({
+    // Halo cian en el suelo, el mismo recurso que usa la vista cenital para
+    // que el coche no quede flotando sobre un negro absoluto. Va debajo de la
+    // sombra: donde el coche apoya, la sombra se lo come.
+    const materialHalo = new THREE.MeshBasicMaterial({
       map: texturaSombra,
-      color: new THREE.Color(0x1b262b),
+      color: paleta.accent.clone(),
       transparent: true,
-      opacity: 0.55,
+      opacity: 0.13,
+      blending: THREE.AdditiveBlending,
       depthWrite: false,
     });
-    materiales.add(materialSuelo);
-    const suelo = new THREE.Mesh(geometriaSombra, materialSuelo);
-    suelo.rotation.x = -Math.PI / 2;
-    suelo.position.y = 0.001;
-    suelo.renderOrder = -3;
-    suelo.visible = false;
-    pivote.add(suelo);
+    materiales.add(materialHalo);
+    const halo = new THREE.Mesh(geometriaSombra, materialHalo);
+    halo.rotation.x = -Math.PI / 2;
+    halo.position.y = 0.002;
+    halo.renderOrder = -2;
+    halo.visible = false;
+    pivote.add(halo);
 
     /* --- Encuadre -------------------------------------------------------- */
     // Antes de cargar el modelo se encuadra sobre una caja aproximada; al
@@ -1013,7 +873,6 @@ export function VehicleModel3D({
         modelo.traverse((obj) => {
           if (!(obj instanceof THREE.Mesh)) return;
           registrarRecursos(obj);
-          suavizarEspejos(obj);
           const nombre = obj.name.toLowerCase();
           if (!esVisibleDesdeFuera(nombre)) {
             obj.visible = false;
@@ -1068,17 +927,12 @@ export function VehicleModel3D({
         const altoInicial = contenedor.clientHeight || 1;
         alturaObjetivo = buscarAlturaObjetivo(tamCoche.y, anchoInicial / altoInicial);
 
-        // Sombra de contacto, ajustada a la huella.
-        // El eje Z va muy escorzado: la cámara mira desde 14° sobre el suelo,
-        // así que un plano proporcional a la huella se comprime en una raja y
-        // el coche parece recortado y flotando. Se estira en profundidad para
-        // que al proyectarse vuelva a parecer una sombra.
-        sombra.scale.set(tamCoche.x * 2.3, tamCoche.z * 2.4, 1);
+        // Sombra de contacto y halo ambiental, ajustados a la huella.
+        sombra.scale.set(tamCoche.x * 2.1, tamCoche.z * 1.14, 1);
         sombra.position.y = 0.004;
         sombra.visible = true;
-        suelo.scale.set(tamCoche.x * 3.4, tamCoche.z * 3.2, 1);
-        suelo.visible = true;
-        ajustarSueloAlTema();
+        halo.scale.set(tamCoche.x * 4.2, tamCoche.z * 1.5, 1);
+        halo.visible = true;
 
         // 4) Clasificación de las ruedas POR POSICIÓN (ver cabecera).
 
@@ -1298,18 +1152,14 @@ export function VehicleModel3D({
       // entonces manda la gravedad (rojo/ámbar), que es la información seria.
       const gravedadMotor = resaltadas.find(([p]) => p === "engine")?.[1];
       if (!gravedadMotor && meshesCapo.length > 0) {
-        // Por debajo del umbral el capó se deja en paz. El tinte es emissive,
-        // y sobre una pintura casi negra hasta un 0,02 de turquesa manda sobre
-        // el color propio: el coche salía verde botella con el motor frío, que
-        // además no es ninguna anomalía que haya que señalar.
-        if (calorActual < UMBRAL_CALOR) {
+        if (calorActual < 12) {
           for (const mesh of meshesCapo) tenir(mesh, NEGRO, 0);
         } else {
           colorDeCalor(colorTemporal, calorActual, paleta);
           // Curva con exponente < 1: sobre chapa oscura un tinte lineal no se
           // percibe hasta muy arriba, y el calor tiene que leerse antes de que
           // el motor esté al rojo.
-          const t = Math.pow((calorActual - UMBRAL_CALOR) / (100 - UMBRAL_CALOR), 0.7);
+          const t = Math.pow(THREE.MathUtils.clamp(calorActual, 0, 100) / 100, 0.7);
           for (const mesh of meshesCapo) tenir(mesh, colorTemporal, t * 0.62);
         }
       }
@@ -1381,7 +1231,8 @@ export function VehicleModel3D({
     // con él cambian los colores del aviso: hay que releerlos y repintar.
     const observadorTema = new MutationObserver(() => {
       refrescarPaleta();
-      ajustarSueloAlTema();
+      relleno.color.copy(paleta.accent);
+      materialHalo.color.copy(paleta.accent);
       const actuales = new Map(resaltadas);
       apiRef.current?.aplicarPiezas(Object.fromEntries(actuales));
       pedirRender();
@@ -1412,16 +1263,16 @@ export function VehicleModel3D({
       for (const g of geometrias) g.dispose();
       for (const m of materiales) m.dispose();
       for (const t of texturas) t.dispose();
-
+      entorno.dispose();
+      pmrem.dispose();
       renderer.dispose();
-
+      renderer.forceContextLoss();
       canvas.remove();
       if (canvasRef.current === canvas) canvasRef.current = null;
     };
   }, []);
 
-  // El nombre accesible vive en un atributo del lienzo, que ya no lo pone
-  // React: hay que refrescarlo a mano cuando cambia el estado del coche.
+  // El nombre accesible ya no lo pone React: hay que refrescarlo a mano.
   useEffect(() => {
     canvasRef.current?.setAttribute("aria-label", etiqueta);
   }, [etiqueta, listo]);
@@ -1452,7 +1303,7 @@ export function VehicleModel3D({
           <span className="text-[10px] uppercase tracking-[0.25em] text-muted">
             Cargando modelo 3D
           </span>
-          <div className="h-[3px] w-40 overflow-hidden rounded-full bg-linea/10">
+          <div className="h-[3px] w-40 overflow-hidden rounded-full bg-white/10">
             <div
               className="h-full rounded-full bg-accent transition-[width] duration-200"
               style={{ width: `${progreso}%` }}
