@@ -6,6 +6,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Clock } from "../components/Clock";
 import { CockpitNotifications } from "../components/CockpitNotifications";
+import { DaylightMode } from "../components/DaylightMode";
 import { ConnectionBadge } from "../components/ConnectionBadge";
 import { Providers } from "../components/Providers";
 import { ServiceWorkerRegister } from "../components/ServiceWorkerRegister";
@@ -58,6 +59,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </div>
             {/* Avisos por encima de todo, visibles en cualquier pantalla. */}
             <CockpitNotifications />
+            {/* Atenuación nocturna calculada, sin sensor de luz. */}
+            <DaylightMode />
           </div>
           <ServiceWorkerRegister />
         </Providers>

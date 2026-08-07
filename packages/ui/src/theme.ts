@@ -22,7 +22,7 @@ export const MBUX = {
   /** Texto principal. */
   text: "#e8f0f2",
   /** Texto atenuado / etiquetas. */
-  muted: "#7f9299",
+  muted: "#9aadb4",
   /** Aviso (ámbar). */
   warning: "#ffb020",
   /** Peligro (rojo). */

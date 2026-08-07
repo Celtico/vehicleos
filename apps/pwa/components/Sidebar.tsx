@@ -165,7 +165,7 @@ export function Sidebar() {
             >
               {item.icon}
             </span>
-            <span className="max-w-full px-1 text-center text-[8.5px] uppercase leading-tight tracking-[0.08em]">
+            <span className="max-w-full px-1 text-center text-[9.5px] uppercase leading-tight tracking-[0.04em]">
               {item.label}
             </span>
           </Link>

@@ -35,13 +35,13 @@ export function FaultPanel({ faults, onSelect, onSeeAll, max = 3 }: FaultPanelPr
     <div className="flex h-full flex-col rounded-2xl border border-white/10 bg-white/[0.03] p-3">
       <div className="mb-2 flex items-center justify-between">
         <span
-          className="truncate text-[10px] uppercase tracking-[0.16em]"
+          className="truncate text-[11.5px] uppercase tracking-[0.1em]"
           style={{ color: faults.length > 0 ? MBUX.danger : MBUX.muted }}
         >
           Averías activas
         </span>
         <span
-          className="flex h-5 min-w-[20px] shrink-0 items-center justify-center rounded-full px-1.5 text-[10px] tabular-nums"
+          className="flex h-5 min-w-[20px] shrink-0 items-center justify-center rounded-full px-1.5 text-[11px] tabular-nums"
           style={{
             background: faults.length > 0 ? `${MBUX.danger}26` : "rgba(255,255,255,0.06)",
             color: faults.length > 0 ? MBUX.danger : MBUX.muted,
@@ -99,7 +99,7 @@ export function FaultPanel({ faults, onSelect, onSeeAll, max = 3 }: FaultPanelPr
                     <span className="block font-mono text-xs" style={{ color }}>
                       {f.code}
                     </span>
-                    <span className="block truncate text-[11px] text-muted">{f.title}</span>
+                    <span className="block truncate text-[12.5px] text-muted">{f.title}</span>
                   </span>
                 </button>
               </li>
@@ -111,7 +111,7 @@ export function FaultPanel({ faults, onSelect, onSeeAll, max = 3 }: FaultPanelPr
       {faults.length > 0 && onSeeAll ? (
         <button
           onClick={onSeeAll}
-          className="mt-1.5 w-full rounded-xl border border-white/10 py-1.5 text-[10px] uppercase tracking-[0.2em] text-muted transition-colors hover:border-accent/40 hover:text-accent"
+          className="mt-1.5 w-full rounded-xl border border-white/10 py-1.5 text-[11px] uppercase tracking-[0.1em] text-muted transition-colors hover:border-accent/40 hover:text-accent"
         >
           {restantes > 0 ? `Ver las ${faults.length}` : "Ver diagnóstico"}
         </button>

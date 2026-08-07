@@ -18,7 +18,7 @@ const config: Config = {
         panel: "#0c1418",
         accent: "#00d2be",
         silver: "#c8d2d6",
-        muted: "#7f9299",
+        muted: "#9aadb4",
         warn: "#ffb020",
         danger: "#ff4d5a",
         okgreen: "#38e07d",

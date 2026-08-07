@@ -3,5 +3,6 @@
  */
 export * from "./vehicle";
 export * from "./vehicle-profile";
+export * from "./sun";
 export * from "./bridge";
 export * from "./telemetry";
