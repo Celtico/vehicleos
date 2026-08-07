@@ -14,14 +14,17 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        cockpit: "#05080a",
-        panel: "#0c1418",
-        accent: "#00d2be",
-        silver: "#c8d2d6",
-        muted: "#9aadb4",
-        warn: "#ffb020",
-        danger: "#ff4d5a",
-        okgreen: "#38e07d",
+        // Leen las variables de globals.css, así el tema entero cambia de
+        // día a noche sin tocar ni una clase.
+        cockpit: "rgb(var(--c-bg) / <alpha-value>)",
+        panel: "rgb(var(--c-panel) / <alpha-value>)",
+        accent: "rgb(var(--c-accent) / <alpha-value>)",
+        silver: "rgb(var(--c-silver) / <alpha-value>)",
+        muted: "rgb(var(--c-muted) / <alpha-value>)",
+        warn: "rgb(var(--c-warning) / <alpha-value>)",
+        danger: "rgb(var(--c-danger) / <alpha-value>)",
+        okgreen: "rgb(var(--c-ok) / <alpha-value>)",
+        linea: "rgb(var(--c-border) / <alpha-value>)",
       },
       fontFamily: {
         thin: ['"Helvetica Neue"', "-apple-system", '"Segoe UI"', "Roboto", "sans-serif"],

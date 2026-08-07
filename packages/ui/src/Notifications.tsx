@@ -11,7 +11,7 @@
  * desaparición antes de quitarlos del DOM.
  */
 import { useEffect, useRef, useState, type CSSProperties } from "react";
-import { MBUX } from "./theme";
+import { alfa, MBUX } from "./theme";
 
 export type NotificationSeverity = "info" | "warning" | "critical";
 
@@ -37,6 +37,18 @@ const SALIDA_MS = 240;
 const TIMEOUT_MS = 6000;
 
 /** Color de acento por severidad. */
+/** Token de color del tema según la gravedad. */
+function tokenSeveridad(s: NotificationSeverity): string {
+  switch (s) {
+    case "info":
+      return "accent";
+    case "warning":
+      return "warning";
+    case "critical":
+      return "danger";
+  }
+}
+
 function colorSeveridad(s: NotificationSeverity): string {
   switch (s) {
     case "info":
@@ -281,6 +293,7 @@ export function NotificationStack({
       <style>{CSS}</style>
       {filas.map(({ notif, saliendo: sale }) => {
         const color = colorSeveridad(notif.severity);
+        const token = tokenSeveridad(notif.severity);
         const critica = notif.severity === "critical";
         return (
           <div
@@ -290,15 +303,15 @@ export function NotificationStack({
             className={`vos-notif${critica ? " vos-notif--critical" : ""}${sale ? " vos-notif--saliendo" : ""}`}
             style={
               {
-                "--vos-notif-color": `${color}55`,
+                "--vos-notif-color": alfa(token, 0.33),
                 display: "flex",
                 gap: 12,
                 alignItems: "flex-start",
                 padding: "13px 14px",
                 borderRadius: 14,
-                background: `linear-gradient(160deg, ${color}1f 0%, rgba(255,255,255,0.03) 55%, rgba(0,0,0,0.25) 100%), ${MBUX.bg}`,
-                border: `1px solid ${color}66`,
-                boxShadow: `0 8px 30px rgba(0,0,0,0.5), 0 0 0 1px ${color}22, 0 0 26px -6px ${color}`,
+                background: `linear-gradient(160deg, ${alfa(token, 0.12)} 0%, rgb(var(--c-panel) / 0.04) 55%, rgb(var(--c-bg) / 0.6) 100%), ${MBUX.bg}`,
+                border: `1px solid ${alfa(token, 0.4)}`,
+                boxShadow: `0 8px 30px rgb(var(--c-bg) / 0.5), 0 0 0 1px ${alfa(token, 0.13)}, 0 0 26px -6px ${color}`,
                 color: MBUX.text,
                 pointerEvents: "auto",
                 overflow: "hidden",

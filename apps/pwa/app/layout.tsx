@@ -36,17 +36,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="es">
       <body>
         <Providers>
+          {/* Marca el tema día/noche en <html>; no pinta nada. */}
+          <DaylightMode />
           <div
             className="flex h-screen overflow-hidden"
             style={{
-              background:
-                "radial-gradient(120% 90% at 30% -10%, #0d181d 0%, #070c0f 45%, #04070a 100%)",
+              background: "var(--c-fondo-degradado)",
             }}
           >
             <Sidebar />
             <div className="flex min-w-0 flex-1 flex-col">
               {/* Barra superior: reloj y estado de conexión */}
-              <header className="flex items-center justify-between border-b border-white/5 px-6 py-3">
+              <header className="flex items-center justify-between border-b border-linea/15 px-6 py-3">
                 <span className="text-[11px] uppercase tracking-[0.35em] text-muted">
                   VehicleOS
                 </span>
@@ -59,8 +60,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </div>
             {/* Avisos por encima de todo, visibles en cualquier pantalla. */}
             <CockpitNotifications />
-            {/* Atenuación nocturna calculada, sin sensor de luz. */}
-            <DaylightMode />
           </div>
           <ServiceWorkerRegister />
         </Providers>

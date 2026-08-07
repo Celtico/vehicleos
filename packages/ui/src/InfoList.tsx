@@ -19,7 +19,7 @@ export interface InfoListProps {
 
 export function InfoList({ title, rows }: InfoListProps) {
   return (
-    <div className="flex h-full flex-col rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+    <div className="flex h-full flex-col panel-cockpit rounded-2xl p-3">
       <span className="mb-2 block text-[11.5px] uppercase tracking-[0.1em] text-accent">
         {title}
       </span>

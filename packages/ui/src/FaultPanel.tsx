@@ -6,7 +6,7 @@
  * muestra su código y qué significa en lenguaje llano, y lleva al detalle
  * completo al tocarla.
  */
-import { MBUX } from "./theme";
+import { alfa, MBUX } from "./theme";
 
 export interface FaultItem {
   /** Código tal cual, p. ej. "P0401". */
@@ -32,7 +32,7 @@ export function FaultPanel({ faults, onSelect, onSeeAll, max = 3 }: FaultPanelPr
   const restantes = faults.length - visibles.length;
 
   return (
-    <div className="flex h-full flex-col rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+    <div className="panel-cockpit flex h-full flex-col rounded-2xl p-3">
       <div className="mb-2 flex items-center justify-between">
         <span
           className="truncate text-[11.5px] uppercase tracking-[0.1em]"
@@ -43,7 +43,7 @@ export function FaultPanel({ faults, onSelect, onSeeAll, max = 3 }: FaultPanelPr
         <span
           className="flex h-5 min-w-[20px] shrink-0 items-center justify-center rounded-full px-1.5 text-[11px] tabular-nums"
           style={{
-            background: faults.length > 0 ? `${MBUX.danger}26` : "rgba(255,255,255,0.06)",
+            background: faults.length > 0 ? alfa("danger", 0.15) : "rgb(var(--c-panel) / 0.08)",
             color: faults.length > 0 ? MBUX.danger : MBUX.muted,
           }}
         >
@@ -70,13 +70,14 @@ export function FaultPanel({ faults, onSelect, onSeeAll, max = 3 }: FaultPanelPr
       ) : (
         <ul className="flex flex-1 flex-col gap-1.5">
           {visibles.map((f) => {
+            const token = f.severity === "error" ? "danger" : "warning";
             const color = f.severity === "error" ? MBUX.danger : MBUX.warning;
             return (
               <li key={f.code}>
                 <button
                   onClick={() => onSelect?.(f.code)}
-                  className="flex w-full items-center gap-2 rounded-xl border px-2.5 py-2 text-left transition-colors hover:bg-white/[0.04]"
-                  style={{ borderColor: `${color}40` }}
+                  className="flex w-full items-center gap-2 rounded-xl border px-2.5 py-2 text-left transition-colors hover:brightness-110"
+                  style={{ borderColor: alfa(token, 0.25) }}
                 >
                   <svg
                     width="16"
@@ -111,7 +112,7 @@ export function FaultPanel({ faults, onSelect, onSeeAll, max = 3 }: FaultPanelPr
       {faults.length > 0 && onSeeAll ? (
         <button
           onClick={onSeeAll}
-          className="mt-1.5 w-full rounded-xl border border-white/10 py-1.5 text-[11px] uppercase tracking-[0.1em] text-muted transition-colors hover:border-accent/40 hover:text-accent"
+          className="mt-1.5 w-full rounded-xl border border-linea/20 py-1.5 text-[11px] uppercase tracking-[0.1em] text-muted transition-colors hover:border-accent/40 hover:text-accent"
         >
           {restantes > 0 ? `Ver las ${faults.length}` : "Ver diagnóstico"}
         </button>

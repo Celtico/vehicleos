@@ -2,16 +2,106 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Cockpit negro de pantalla completa con tipografía fina. */
+/*
+ * Paleta del cockpit en variables, para poder cambiar de tema entero.
+ *
+ * El tema por defecto es el NOCTURNO: es una pantalla de coche y de noche
+ * un fondo claro deslumbra. De día se aplica `data-tema="dia"` sobre <html>,
+ * que lo decide el cálculo solar (ver components/DaylightMode.tsx), porque
+ * la tablet no tiene sensor de luz.
+ *
+ * Se guardan como canales sueltos para poder componer transparencias con
+ * rgb(var(--c-x) / 0.15) sin duplicar cada color.
+ */
+:root {
+  --c-bg: 5 8 10;
+  --c-panel: 255 255 255; /* se usa con alfa baja sobre el fondo oscuro */
+  --c-panel-a: 0.035;
+  --c-border: 255 255 255;
+  --c-border-a: 0.1;
+  --c-text: 232 240 242;
+  --c-silver: 200 210 214;
+  --c-muted: 154 173 180;
+  --c-accent: 0 210 190;
+  --c-warning: 255 176 32;
+  --c-danger: 255 77 90;
+  --c-ok: 56 224 125;
+  --c-track: 27 37 41;
+  --c-fondo-degradado: radial-gradient(
+    120% 90% at 30% -10%,
+    #0d181d 0%,
+    #070c0f 45%,
+    #04070a 100%
+  );
+  /* Rampa de la chapa del coche, de la sombra al reflejo. */
+  --car-0: #000000;
+  --car-1: #05090b;
+  --car-2: #0c1418;
+  --car-3: #162126;
+  --car-4: #1a272c;
+  --car-5: #28373d;
+}
+
+/*
+ * Tema DIURNO. No es el nocturno invertido: sobre fondo claro el turquesa
+ * de la marca queda ilegible, así que se oscurece; lo mismo con el ámbar,
+ * el rojo y el verde, que necesitan más carga para separarse del blanco.
+ */
+:root[data-tema="dia"] {
+  --c-bg: 237 241 243;
+  --c-panel: 255 255 255;
+  --c-panel-a: 0.92;
+  --c-border: 13 22 24;
+  --c-border-a: 0.13;
+  --c-text: 13 22 24;
+  --c-silver: 32 47 51;
+  --c-muted: 85 104 110;
+  --c-accent: 0 119 108;
+  --c-warning: 163 96 0;
+  --c-danger: 200 16 46;
+  --c-ok: 18 122 68;
+  --c-track: 205 214 217;
+  --c-fondo-degradado: radial-gradient(
+    120% 90% at 30% -10%,
+    #ffffff 0%,
+    #eef2f4 45%,
+    #e4eaec 100%
+  );
+  /* De día, azul oscuro: sobre fondo claro se recorta mejor que un
+     plateado, que se confundiría con el propio fondo. */
+  --car-0: #8a97a6;
+  --car-1: #101d30;
+  --car-2: #17273e;
+  --car-3: #1f334c;
+  --car-4: #26405e;
+  --car-5: #345474;
+}
+
+/* Cockpit a pantalla completa con tipografía fina. */
 html,
 body {
   height: 100%;
-  background: #05080a;
-  color: #e8f0f2;
-  font-family: "Helvetica Neue", -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: rgb(var(--c-bg));
+  color: rgb(var(--c-text));
+  font-family:
+    "Helvetica Neue",
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
   font-weight: 300;
   -webkit-font-smoothing: antialiased;
   overscroll-behavior: none;
+  /* El cambio de tema no debe ser un fogonazo mientras se conduce. */
+  transition:
+    background-color 900ms ease,
+    color 900ms ease;
+}
+
+/* Superficies del cockpit, que siguen al tema. */
+.panel-cockpit {
+  background: rgb(var(--c-panel) / var(--c-panel-a));
+  border: 1px solid rgb(var(--c-border) / var(--c-border-a));
 }
 
 /* Barra de scroll discreta acorde al tema. */
@@ -20,7 +110,7 @@ body {
   height: 8px;
 }
 *::-webkit-scrollbar-thumb {
-  background: rgba(127, 146, 153, 0.35);
+  background: rgb(var(--c-muted) / 0.35);
   border-radius: 4px;
 }
 *::-webkit-scrollbar-track {
@@ -29,8 +119,10 @@ body {
 
 /* Inputs del cockpit. */
 .cockpit-input {
-  @apply w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-silver outline-none transition-colors;
+  @apply w-full rounded-lg px-3 py-2 text-sm text-silver outline-none transition-colors;
+  background: rgb(var(--c-panel) / calc(var(--c-panel-a) * 1.6));
+  border: 1px solid rgb(var(--c-border) / var(--c-border-a));
 }
 .cockpit-input:focus {
-  border-color: rgba(0, 210, 190, 0.5);
+  border-color: rgb(var(--c-accent) / 0.5);
 }

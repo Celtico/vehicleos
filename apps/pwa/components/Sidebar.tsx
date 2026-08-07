@@ -117,7 +117,7 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <nav className="flex h-full w-[94px] shrink-0 flex-col items-center gap-0.5 border-r border-white/5 bg-black/40 py-3">
+    <nav className="flex h-full w-[94px] shrink-0 flex-col items-center gap-0.5 border-r border-linea/15 bg-cockpit/60 py-3">
       {/*
         Emblema propio de VehicleOS: arco de instrumento abierto (como los
         gauges del cuadro) con la "V" de Vehicle inscrita. Deliberadamente no

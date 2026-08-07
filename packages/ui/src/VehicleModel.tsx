@@ -187,33 +187,24 @@ const SEVERITY_FILL: Record<PartSeverity, number> = {
   error: 0.26,
 };
 
-/** Convierte "#rrggbb" a componentes RGB. */
-function hexToRgb(hex: string): [number, number, number] {
-  const h = hex.replace("#", "");
-  return [
-    parseInt(h.slice(0, 2), 16),
-    parseInt(h.slice(2, 4), 16),
-    parseInt(h.slice(4, 6), 16),
-  ];
-}
-
-/** Mezcla lineal de dos colores hexadecimales (`t` en 0..1). */
-function mixHex(a: string, b: string, t: number): string {
-  const [ar, ag, ab] = hexToRgb(a);
-  const [br, bg, bb] = hexToRgb(b);
-  const byte = (x: number) =>
-    Math.round(clamp(x, 0, 255))
-      .toString(16)
-      .padStart(2, "0");
-  return `#${byte(ar + (br - ar) * t)}${byte(ag + (bg - ag) * t)}${byte(ab + (bb - ab) * t)}`;
+/**
+ * Mezcla dos colores del tema.
+ *
+ * Se usa `color-mix` de CSS y no aritmética sobre hexadecimales porque los
+ * colores del tema son variables (`rgb(var(--c-x))`), no literales: no hay
+ * componentes que interpolar en JavaScript.
+ */
+function mezclar(a: string, b: string, t: number): string {
+  const pct = Math.round(clamp(t, 0, 1) * 100);
+  return `color-mix(in srgb, ${b} ${pct}%, ${a})`;
 }
 
 /** Color del calor del vano motor: cian (frío) → ámbar (caliente) → rojo. */
 function heatColor(heat: number): string {
   const t = clamp(heat, 0, 100) / 100;
   return t <= 0.55
-    ? mixHex(MBUX.accent, MBUX.warning, t / 0.55)
-    : mixHex(MBUX.warning, MBUX.danger, (t - 0.55) / 0.45);
+    ? mezclar(MBUX.accent, MBUX.warning, t / 0.55)
+    : mezclar(MBUX.warning, MBUX.danger, (t - 0.55) / 0.45);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -431,20 +422,20 @@ export function VehicleModel({
       <defs>
         {/* Chapa metálica oscura iluminada desde arriba a la izquierda */}
         <linearGradient id={`${uid}-paint`} x1="0.12" y1="0" x2="0.9" y2="1">
-          <stop offset="0%" stopColor="#28373d" />
-          <stop offset="34%" stopColor="#172328" />
-          <stop offset="72%" stopColor="#0c1418" />
-          <stop offset="100%" stopColor="#1a272c" />
+          <stop offset="0%" stopColor="var(--car-5)" />
+          <stop offset="34%" stopColor="var(--car-3)" />
+          <stop offset="72%" stopColor="var(--car-2)" />
+          <stop offset="100%" stopColor="var(--car-4)" />
         </linearGradient>
         {/* Cristales */}
         <linearGradient id={`${uid}-glass`} x1="0" y1="0" x2="0.6" y2="1">
-          <stop offset="0%" stopColor="#0d2228" />
-          <stop offset="100%" stopColor="#050c0f" />
+          <stop offset="0%" stopColor="var(--car-4)" />
+          <stop offset="100%" stopColor="var(--car-1)" />
         </linearGradient>
         {/* Capó base (algo más claro que el resto de la chapa) */}
         <linearGradient id={`${uid}-hood`} x1="0.2" y1="0" x2="0.85" y2="1">
-          <stop offset="0%" stopColor="#233238" />
-          <stop offset="100%" stopColor="#101a1e" />
+          <stop offset="0%" stopColor="var(--car-5)" />
+          <stop offset="100%" stopColor="var(--car-2)" />
         </linearGradient>
         {/* Reflejo especular del techo */}
         <linearGradient id={`${uid}-spec`} x1="0" y1="0" x2="0" y2="1">
@@ -464,8 +455,8 @@ export function VehicleModel({
         </radialGradient>
         {/* Neumático */}
         <linearGradient id={`${uid}-tyre`} x1="0" y1="0" x2="1" y2="0.3">
-          <stop offset="0%" stopColor="#141c20" />
-          <stop offset="100%" stopColor="#05090b" />
+          <stop offset="0%" stopColor="var(--car-3)" />
+          <stop offset="100%" stopColor="var(--car-1)" />
         </linearGradient>
         {/* Ópticas */}
         <linearGradient id={`${uid}-head`} x1="0" y1="0" x2="1" y2="1">
@@ -494,7 +485,7 @@ export function VehicleModel({
       <ellipse cx={120} cy={182} rx={94} ry={160} fill={`url(#${uid}-ground)`} />
       <path
         d={BODY_PATH}
-        fill="#000000"
+        fill="var(--car-0)"
         opacity={0.85}
         filter={`url(#${uid}-soft)`}
         transform="translate(0 10)"
@@ -621,13 +612,13 @@ export function VehicleModel({
       {/* Retrovisores */}
       <path
         d="M 66 142 L 57 145 L 59 150 L 67 148 Z"
-        fill="#162126"
+        fill="var(--car-3)"
         stroke={MBUX.accentDim}
         strokeWidth={0.7}
       />
       <path
         d="M 174 142 L 183 145 L 181 150 L 173 148 Z"
-        fill="#162126"
+        fill="var(--car-3)"
         stroke={MBUX.accentDim}
         strokeWidth={0.7}
       />

@@ -55,7 +55,7 @@ export function MetricCard({
     danger !== undefined ? clamp(((danger - min) / (max - min)) * 100, 0, 100) : null;
 
   return (
-    <div className="flex flex-col justify-between rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
+    <div className="flex flex-col justify-between panel-cockpit rounded-2xl px-4 py-3">
       <div className="flex items-center justify-between">
         <span className="text-[11.5px] uppercase tracking-[0.1em] text-accent">{label}</span>
         {icon ? <span className="text-muted">{icon}</span> : null}
@@ -73,7 +73,7 @@ export function MetricCard({
       </div>
 
       <div>
-        <div className="relative h-1 w-full overflow-hidden rounded-full bg-white/10">
+        <div className="relative h-1 w-full overflow-hidden rounded-full bg-muted/25">
           {inicioPeligro !== null ? (
             <span
               className="absolute inset-y-0 rounded-r-full"

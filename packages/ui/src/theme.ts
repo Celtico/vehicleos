@@ -3,34 +3,48 @@
  * fondo negro con degradados sutiles, acentos cian-turquesa, plateados
  * y tipografía fina.
  */
+/** Un color del tema, resuelto en tiempo de ejecución por CSS. */
+function CSS(token: string): string {
+  return `rgb(var(--c-${token}))`;
+}
+
+/**
+ * El mismo color con transparencia.
+ *
+ * Antes se concatenaba el alfa al hexadecimal (`${MBUX.danger}26`), pero eso
+ * deja de funcionar en cuanto el color es una variable: hay que componerlo.
+ */
+export function alfa(token: string, a: number): string {
+  return `rgb(var(--c-${token}) / ${a})`;
+}
+
 export const MBUX = {
   /** Fondo base (negro azulado profundo). */
-  bg: "#05080a",
+  bg: CSS("bg"),
   /** Degradado de pantalla completa. */
-  bgGradient: "radial-gradient(120% 90% at 30% -10%, #0d181d 0%, #070c0f 45%, #04070a 100%)",
+  bgGradient: "var(--c-fondo-degradado)",
   /** Fondo de paneles/tarjetas. */
-  panel:
-    "linear-gradient(160deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.015) 60%, rgba(0,210,190,0.03) 100%)",
+  panel: "rgb(var(--c-panel) / var(--c-panel-a))",
   /** Borde sutil de paneles. */
-  border: "1px solid rgba(148,178,184,0.14)",
+  border: "1px solid rgb(var(--c-border) / var(--c-border-a))",
   /** Acento principal cian-turquesa MBUX. */
-  accent: "#00d2be",
+  accent: CSS("accent"),
   /** Acento atenuado (halos, pistas). */
-  accentDim: "rgba(0,210,190,0.35)",
+  accentDim: alfa("accent", 0.35),
   /** Plateado para texto secundario brillante. */
-  silver: "#c8d2d6",
+  silver: CSS("silver"),
   /** Texto principal. */
-  text: "#e8f0f2",
+  text: CSS("text"),
   /** Texto atenuado / etiquetas. */
-  muted: "#9aadb4",
+  muted: CSS("muted"),
   /** Aviso (ámbar). */
-  warning: "#ffb020",
+  warning: CSS("warning"),
   /** Peligro (rojo). */
-  danger: "#ff4d5a",
+  danger: CSS("danger"),
   /** Correcto (verde suave). */
-  ok: "#38e07d",
+  ok: CSS("ok"),
   /** Pista de los gauges (gris grafito). */
-  track: "#1b2529",
+  track: CSS("track"),
   /** Familia tipográfica fina. */
   font: '"Helvetica Neue", -apple-system, "Segoe UI", Roboto, Arial, sans-serif',
 } as const;
