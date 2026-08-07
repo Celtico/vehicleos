@@ -90,11 +90,30 @@ class BridgeDispatcher(private val core: BridgeCore) {
                 JSONObject().put("subscribed", false)
             }
 
+            "raw" -> raw(params)
+
             else -> throw BridgeException(
                 BridgeException.INVALID_REQUEST,
                 "Método desconocido: \"$method\"",
             )
         }
+
+    /**
+     * `raw { command, timeoutMs? }`: comando literal al adaptador.
+     *
+     * Necesario para las centralitas propietarias (ver MercedesProvider en
+     * el SDK). Devuelve la respuesta tal cual, sin interpretarla: quien
+     * sabe leerla es el protocolo del lado TypeScript.
+     */
+    private suspend fun raw(params: JSONObject?): String {
+        val command = params?.optString("command")?.takeIf { it.isNotBlank() }
+            ?: throw BridgeException(
+                BridgeException.INVALID_REQUEST,
+                "Falta el parámetro \"command\"",
+            )
+        val timeout = params.optLong("timeoutMs", 0L).takeIf { it > 0 } ?: RAW_TIMEOUT_MS
+        return requireClient().raw(command, timeout)
+    }
 
     /** `read { pid }`: lectura puntual de un PID por su clave del contrato. */
     private suspend fun read(params: JSONObject?): JSONObject {
@@ -131,4 +150,12 @@ class BridgeDispatcher(private val core: BridgeCore) {
             .put("id", id)
             .put("error", JSONObject().put("code", code).put("message", message))
             .toString()
+
+    private companion object {
+        /**
+         * Las centralitas de chasis tardan más que el motor en contestar, y
+         * la inicialización de KWP2000 incluye un arranque de bus.
+         */
+        const val RAW_TIMEOUT_MS = 5_000L
+    }
 }

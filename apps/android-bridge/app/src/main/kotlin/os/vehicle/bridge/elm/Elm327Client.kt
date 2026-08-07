@@ -63,6 +63,18 @@ class Elm327Client(
         return Elm327Codec.isClearDtcOk(raw)
     }
 
+    /**
+     * Envía un comando literal al adaptador y devuelve su respuesta cruda.
+     *
+     * Es lo que permite hablar con centralitas que el OBD-II genérico no
+     * cubre (ABS, ESP, airbag): requieren cambiar de protocolo con ATSP y
+     * direccionar cada módulo con ATSH, cosa que no encaja en `readPid`.
+     * Comparte el mismo mutex, así que no se entrelaza con el bucle de
+     * telemetría.
+     */
+    suspend fun raw(cmd: String, timeoutMs: Long = DTC_TIMEOUT_MS): String =
+        command(cmd, timeoutMs)
+
     /** Envía un comando serializado por el mutex y con timeout. */
     private suspend fun command(cmd: String, timeoutMs: Long = commandTimeoutMs): String =
         mutex.withLock {

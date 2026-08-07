@@ -68,8 +68,3 @@ export class ThinkDiagProvider extends UnimplementedProvider {
 export class XToolProvider extends UnimplementedProvider {
   readonly id = "xtool";
 }
-
-/** Protocolo propietario Mercedes (datos extendidos de confort y chasis). */
-export class MercedesProvider extends UnimplementedProvider {
-  readonly id = "mercedes";
-}

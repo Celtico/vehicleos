@@ -122,6 +122,19 @@ export class AndroidBridgeProvider implements VehicleProvider {
     await this.call("clearDtc");
   }
 
+  /**
+   * Envía un comando literal al adaptador y devuelve su respuesta cruda.
+   *
+   * Lo usa MercedesProvider para hablar con las centralitas que el OBD-II
+   * genérico no cubre. No debilita la regla de oro: el hardware lo sigue
+   * tocando solo el bridge, esto únicamente le pasa texto.
+   */
+  async raw(command: string, timeoutMs?: number): Promise<string> {
+    const params: Record<string, unknown> = { command };
+    if (timeoutMs !== undefined) params.timeoutMs = timeoutMs;
+    return (await this.call("raw", params)) as string;
+  }
+
   live(listener: (t: VehicleTelemetry) => void): Unsubscribe {
     if (this.connectionState !== "connected") throw new NotConnectedError(this.id);
     this.liveListeners.add(listener);

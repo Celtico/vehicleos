@@ -15,9 +15,11 @@ export {
   AndroidBridgeProvider,
   type AndroidBridgeProviderOptions,
 } from "./providers/android-bridge-provider";
+export { CanProvider, ThinkDiagProvider, XToolProvider } from "./providers/future";
 export {
-  CanProvider,
   MercedesProvider,
-  ThinkDiagProvider,
-  XToolProvider,
-} from "./providers/future";
+  type EcuModule,
+  type MercedesProviderOptions,
+  type ModuleKind,
+  type ModuloDescubierto,
+} from "./providers/mercedes-provider";

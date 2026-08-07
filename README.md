@@ -108,7 +108,15 @@ El pipeline vive en `.gitlab-ci.yml` (GitLab CI) con cinco etapas: `setup`
 Los artefactos de build se comparten entre etapas y el APK de depuración queda
 publicado como artefacto del pipeline.
 
+## Diagnóstico más allá del OBD-II genérico
+
+El modo 03 estándar solo devuelve códigos del motor. Los de ABS, ESP y airbag
+viven en centralitas aparte que hablan KWP2000. `MercedesProvider` las
+consulta a través del bridge; el protocolo está cubierto por tests, pero las
+direcciones de cada centralita se **descubren** sobre el coche real en lugar
+de suponerse. Ver [docs/mercedes-provider.md](docs/mercedes-provider.md).
+
 ## Providers futuros
 
-`vehicle-sdk` ya define stubs tipados para: CAN directo, ThinkDiag, XTool y
-protocolo propietario Mercedes. Implementar uno = implementar `VehicleProvider`.
+`vehicle-sdk` define stubs tipados para CAN directo, ThinkDiag y XTool.
+Implementar uno = implementar `VehicleProvider`.

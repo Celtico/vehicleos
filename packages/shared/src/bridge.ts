@@ -26,7 +26,17 @@ export type BridgeMethod =
   | "dtc"
   | "clearDtc"
   | "subscribe" // inicia el stream de telemetría (eventos "telemetry")
-  | "unsubscribe";
+  | "unsubscribe"
+  /**
+   * params: { command: string, timeoutMs?: number } — envía un comando
+   * literal al adaptador y devuelve su respuesta en crudo.
+   *
+   * Existe para hablar con centralitas que el OBD-II genérico no cubre
+   * (ABS, ESP, airbag), que requieren cambiar de protocolo y direccionar
+   * cada módulo. No rompe la regla de oro: el hardware lo sigue tocando
+   * únicamente el bridge; esto solo mueve texto.
+   */
+  | "raw";
 
 /** Petición JSON-RPC de la PWA/SDK hacia el bridge. */
 export interface BridgeRequest {

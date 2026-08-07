@@ -9,12 +9,8 @@ import {
   AndroidBridgeProvider,
   type AndroidBridgeProviderOptions,
 } from "./providers/android-bridge-provider";
-import {
-  CanProvider,
-  MercedesProvider,
-  ThinkDiagProvider,
-  XToolProvider,
-} from "./providers/future";
+import { CanProvider, ThinkDiagProvider, XToolProvider } from "./providers/future";
+import { MercedesProvider, type MercedesProviderOptions } from "./providers/mercedes-provider";
 import {
   SimulatorProvider,
   type SimulatorProviderOptions,
@@ -26,6 +22,11 @@ export type ProviderKind =
 export interface CreateProviderOptions {
   simulator?: SimulatorProviderOptions;
   androidBridge?: AndroidBridgeProviderOptions;
+  /**
+   * MercedesProvider necesita un provider base con acceso al adaptador; si
+   * no se indica, se envuelve un AndroidBridgeProvider nuevo.
+   */
+  mercedes?: Omit<MercedesProviderOptions, "base"> & { base?: MercedesProviderOptions["base"] };
 }
 
 /** Crea el provider indicado. */
@@ -44,7 +45,12 @@ export function createVehicleProvider(
       return new ThinkDiagProvider();
     case "xtool":
       return new XToolProvider();
-    case "mercedes":
-      return new MercedesProvider();
+    case "mercedes": {
+      const { base, ...resto } = options.mercedes ?? {};
+      return new MercedesProvider({
+        base: base ?? new AndroidBridgeProvider(options.androidBridge),
+        ...resto,
+      });
+    }
   }
 }
