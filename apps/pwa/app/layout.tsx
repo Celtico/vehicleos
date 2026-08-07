@@ -16,6 +16,7 @@ import { FaultBadge } from "../components/FaultBadge";
 import { Providers } from "../components/Providers";
 import { ServiceWorkerRegister } from "../components/ServiceWorkerRegister";
 import { BottomNav } from "../components/BottomNav";
+import { TabletGate } from "../components/TabletGate";
 
 export const metadata: Metadata = {
   title: "VehicleOS Cockpit",
@@ -43,6 +44,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Providers>
           {/* Marca el tema día/noche en <html>; no pinta nada. */}
           <DaylightMode />
+          <TabletGate>
           <div
             className="flex h-[100dvh] overflow-hidden"
             style={{
@@ -74,6 +76,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             {/* Avisos por encima de todo, visibles en cualquier pantalla. */}
             <CockpitNotifications />
           </div>
+          </TabletGate>
           <ServiceWorkerRegister />
         </Providers>
       </body>
