@@ -13,20 +13,19 @@ import { Cluster } from "../components/Cluster";
  */
 const URL_APP = "https://coche.serverscel.com";
 const URL_APK = "/vehicleos-bridge.apk";
-const URL_REPO = "https://gitwins.serverscel.com/cel/vehicleos";
 
 /** Capturas del producto, con su texto alternativo descriptivo. */
 const SHOTS = {
   dash: {
-    src: "/img/dash-abs.jpg",
+    src: "/img/dash-c0035.jpg",
     alt: "Cuadro de VehicleOS: la rueda delantera izquierda aparece resaltada en rojo tras detectarse el código C0035, con un aviso emergente en la esquina superior derecha.",
   },
   diag: {
-    src: "/img/diagnostics-fault.jpg",
+    src: "/img/diagnostics-c0035.jpg",
     alt: "Pantalla de diagnóstico: el código C0035 explicado como sensor de velocidad de la rueda delantera izquierda, con causa probable al 75 %, lista de causas, soluciones y si se puede seguir conduciendo.",
   },
   ai: {
-    src: "/img/ai.jpg",
+    src: "/img/ai-c0035.jpg",
     alt: "Pantalla del asistente con preguntas sugeridas y una respuesta sobre el código activo.",
   },
   panel: {
@@ -330,15 +329,6 @@ export default function Home() {
                   Descargar APK
                 </a>
                 <p className="cta-nota">Android 8.0 o superior · 2,2 MB</p>
-              </div>
-              <div className="card">
-                <h3>Código fuente</h3>
-                <p>
-                  Todo el proyecto: cockpit, servidor, puente Android, protocolo y simulador.
-                </p>
-                <a className="cta cta-ghost" href={URL_REPO} target="_blank" rel="noopener">
-                  Ver el repositorio
-                </a>
               </div>
             </div>
           </section>

@@ -7,7 +7,8 @@
  *    (los WebSocket no pasan por fetch; las peticiones de API no se cachean).
  *  - Navegaciones: red con fallback a caché (permite abrir la app offline).
  */
-const STATIC_CACHE = "vehicleos-static-v1";
+// v2: iconos regenerados en azul; el nombre nuevo invalida la caché antigua.
+const STATIC_CACHE = "vehicleos-static-v2";
 const PRECACHE = ["/", "/manifest.json", "/icons/icon-192.png", "/icons/icon-512.png"];
 
 self.addEventListener("install", (event) => {
