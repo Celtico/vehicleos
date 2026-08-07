@@ -67,8 +67,8 @@ export interface VehicleModel3DProps {
   parts?: Partial<Record<VehiclePartId, PartSeverity>>;
   /** 0-100: calor del vano motor (tiñe el capó de cian → ámbar → rojo). */
   engineHeat?: number;
-  /** Alto del lienzo en píxeles. */
-  height?: number;
+  /** Alto del lienzo: píxeles o cualquier valor CSS ("100%" para fondo). */
+  height?: number | string;
   /** Callback al tocar una pieza (para abrir el detalle de la avería). */
   onPartClick?: (part: VehiclePartId) => void;
   /** Qué dibujar si el dispositivo no puede con WebGL. */
@@ -86,14 +86,24 @@ const LARGO_OBJETIVO = 4;
 
 /** Encuadre: campo de visión y elevación de la cámara sobre el suelo. */
 const FOV = 26;
-const ELEVACION = THREE.MathUtils.degToRad(14);
-/** Margen alrededor del coche al calcular la distancia de cámara. */
-const MARGEN_ENCUADRE = 1.1;
+const ELEVACION = THREE.MathUtils.degToRad(0);
+/**
+ * Margen alrededor del coche al calcular la distancia de cámara. La vista es
+ * el FONDO del cuadro entero: el coche se queda pequeño y con aire para que
+ * los relojes no lo tapen.
+ */
+const MARGEN_ENCUADRE = 1.7;
+
+/**
+ * Cuánto sube la cámara (en metros de escena, el coche mide 4 de largo) para
+ * que el coche quede por debajo del centro de la pantalla.
+ */
+const DESCENSO_COCHE = 0.1;
 
 /** Vista inicial: tres cuartos delantero por el lado del conductor. */
-const GIRO_INICIAL = -0.62;
+const GIRO_INICIAL = -0.48;
 /** Velocidad de la rotación automática (rad/s). */
-const VELOCIDAD_GIRO = 0.18;
+const VELOCIDAD_GIRO = 0.005; // vista fija de producto; el arrastre manual sigue
 
 /** Nombre legible de cada pieza (para el `aria-label`). */
 const ETIQUETAS: Record<VehiclePartId, string> = {
@@ -127,7 +137,7 @@ type ClaveTema = "accent" | "warning" | "danger" | "ok";
 
 /** Valor de respaldo si la variable CSS no está disponible. */
 const RESPALDO_TEMA: Record<ClaveTema, number> = {
-  accent: 0x00d2be,
+  accent: 0x4d94ff,
   warning: 0xffb020,
   danger: 0xff4d5a,
   ok: 0x38e07d,
@@ -344,6 +354,11 @@ function crearEntornoEstudio(): THREE.DataTexture {
   textura.minFilter = THREE.LinearFilter;
   textura.magFilter = THREE.LinearFilter;
   textura.generateMipmaps = false;
+  // OJO: sin esto el entorno queda BOCA ABAJO. La fila 0 de `datos` es el
+  // cenit, pero una DataTexture tiene flipY=false y en el shader
+  // equirectangular v=0 es mirar hacia ABAJO: el softbox del techo acababa
+  // debajo del coche y por eso los bajos reflejaban blanco quemado.
+  textura.flipY = true;
   textura.needsUpdate = true;
   return textura;
 }
@@ -361,6 +376,31 @@ function crearTexturaSombra(): THREE.CanvasTexture {
     grad.addColorStop(0.42, "rgba(255,255,255,0.72)");
     grad.addColorStop(0.72, "rgba(255,255,255,0.22)");
     grad.addColorStop(1, "rgba(255,255,255,0)");
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, LADO, LADO);
+  }
+  const textura = new THREE.CanvasTexture(canvas);
+  textura.colorSpace = THREE.SRGBColorSpace;
+  return textura;
+}
+
+/**
+ * Anillo de luz para el suelo (el "podio" del coche): una corona nítida con
+ * los bordes fundidos, dibujada en un canvas. El color lo pone el material.
+ */
+function crearTexturaAnillo(): THREE.CanvasTexture {
+  const LADO = 512;
+  const canvas = document.createElement("canvas");
+  canvas.width = LADO;
+  canvas.height = LADO;
+  const ctx = canvas.getContext("2d");
+  if (ctx) {
+    const c = LADO / 2;
+    const grad = ctx.createRadialGradient(c, c, 0, c, c, c);
+    grad.addColorStop(0.726, "rgba(255,255,255,0)");
+    grad.addColorStop(0.737, "rgba(255,255,255,0.95)");
+    grad.addColorStop(0.746, "rgba(255,255,255,0.2)");
+    grad.addColorStop(0.758, "rgba(255,255,255,0)");
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, LADO, LADO);
   }
@@ -531,7 +571,9 @@ export function VehicleModel3D({
     });
     if (activas.length === 0) return "Vista 3D del vehículo. Ninguna pieza señalada.";
     const nombres = activas.map((p) => ETIQUETAS[p]).join(", ");
-    return `Vista 3D del vehículo. ${activas.length === 1 ? "Avería en" : "Averías en"} ${nombres}.`;
+    return `Vista 3D del vehículo. ${
+      activas.length === 1 ? "Avería en" : "Averías en"
+    } ${nombres}.`;
   }, [parts]);
 
   /* ---------------------------------------------------------------------- */
@@ -591,6 +633,8 @@ export function VehicleModel3D({
     }
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setClearAlpha(0);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.45;
@@ -618,18 +662,29 @@ export function VehicleModel3D({
     const hdri = crearEntornoEstudio();
     const entorno = pmrem.fromEquirectangular(hdri).texture;
     scene.environment = entorno;
-    scene.environmentIntensity = 1.5;
+    scene.environmentIntensity = 0.1;
     hdri.dispose();
 
     /* --- Luces ---------------------------------------------------------- */
-    const ambiental = new THREE.AmbientLight(0xdfeff2, 0.35);
+    const ambiental = new THREE.AmbientLight(0xbfe6ff, 0.35);
     scene.add(ambiental);
 
-    const principal = new THREE.DirectionalLight(0xffffff, 2.2);
+    const principal = new THREE.DirectionalLight(0xffffff, 1.2);
     principal.position.set(4, 6, 5);
+    // La luz clave proyecta la sombra del coche sobre el suelo.
+    principal.castShadow = true;
+    principal.shadow.mapSize.set(2048, 2048);
+    principal.shadow.camera.left = -4;
+    principal.shadow.camera.right = 4;
+    principal.shadow.camera.top = 4;
+    principal.shadow.camera.bottom = -4;
+    principal.shadow.camera.near = 0.1;
+    principal.shadow.camera.far = 20;
+    principal.shadow.bias = -0.0003;
+    principal.shadow.normalBias = 0.02;
     scene.add(principal);
 
-    const relleno = new THREE.DirectionalLight(paleta.accent.clone(), 0.85);
+    const relleno = new THREE.DirectionalLight(paleta.accent.clone(), 1.85);
     relleno.position.set(-5, 2.5, 3);
     scene.add(relleno);
 
@@ -757,7 +812,7 @@ export function VehicleModel3D({
         if (original.envMapIntensity !== undefined) {
           m.envMapIntensity = original.envMapIntensity * (1 - fuerza * 0.75);
         }
-        const mapaDeseado = fuerza > 0.5 ? null : (original.map ?? null);
+        const mapaDeseado = fuerza > 0.5 ? null : original.map ?? null;
         if (m.map !== mapaDeseado) {
           m.map = mapaDeseado;
           m.needsUpdate = true;
@@ -800,7 +855,7 @@ export function VehicleModel3D({
       map: texturaSombra,
       color: paleta.accent.clone(),
       transparent: true,
-      opacity: 0.13,
+      opacity: 0.35,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     });
@@ -811,6 +866,37 @@ export function VehicleModel3D({
     halo.renderOrder = -2;
     halo.visible = false;
     pivote.add(halo);
+
+    // Anillo de "podio" alrededor del coche, como en los renders de producto.
+    const texturaAnillo = crearTexturaAnillo();
+    texturas.add(texturaAnillo);
+    const materialAnillo = new THREE.MeshBasicMaterial({
+      map: texturaAnillo,
+      color: paleta.accent.clone(),
+      transparent: true,
+      opacity: 0.55,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    materiales.add(materialAnillo);
+    const anillo = new THREE.Mesh(geometriaSombra, materialAnillo);
+    anillo.rotation.x = -Math.PI / 2;
+    anillo.position.y = 0.003;
+    anillo.renderOrder = -2;
+    anillo.visible = false;
+    pivote.add(anillo);
+
+    // Suelo que RECIBE la sombra proyectada por la luz clave. ShadowMaterial
+    // solo pinta la sombra: el resto del plano queda transparente y se sigue
+    // viendo el fondo del cockpit. Va en la escena, no en el pivote: el suelo
+    // no gira con el coche.
+    const materialSuelo = new THREE.ShadowMaterial({ opacity: 0.5 });
+    materiales.add(materialSuelo);
+    const suelo = new THREE.Mesh(geometriaSombra, materialSuelo);
+    suelo.rotation.x = -Math.PI / 2;
+    suelo.scale.setScalar(16);
+    suelo.receiveShadow = true;
+    scene.add(suelo);
 
     /* --- Encuadre -------------------------------------------------------- */
     // Antes de cargar el modelo se encuadra sobre una caja aproximada; al
@@ -833,9 +919,11 @@ export function VehicleModel3D({
       camera.aspect = ancho / alto;
       const d = distanciaDeEncuadre(puntosEncuadre, alturaObjetivo, dirCamara, camera.aspect);
       // La cámara se planta a distancia `d` del punto al que mira.
+      // Cámara y punto de mira suben juntos: el coche baja en pantalla y
+      // deja despejada la franja superior, donde viven las magnitudes.
       camera.position.copy(dirCamara).multiplyScalar(d);
-      camera.position.y += alturaObjetivo;
-      camera.lookAt(0, alturaObjetivo, 0);
+      camera.position.y += alturaObjetivo + DESCENSO_COCHE;
+      camera.lookAt(0, alturaObjetivo + DESCENSO_COCHE, 0);
       camera.updateProjectionMatrix();
       pedirRender();
     };
@@ -879,6 +967,7 @@ export function VehicleModel3D({
             return;
           }
           obj.frustumCulled = true;
+          obj.castShadow = true;
           visibles.push(obj);
         });
 
@@ -933,6 +1022,9 @@ export function VehicleModel3D({
         sombra.visible = true;
         halo.scale.set(tamCoche.x * 4.2, tamCoche.z * 1.5, 1);
         halo.visible = true;
+        // El anillo es un círculo algo mayor que el largo del coche.
+        anillo.scale.set(tamCoche.z * 1.2, tamCoche.z * 1.2, 1);
+        anillo.visible = true;
 
         // 4) Clasificación de las ruedas POR POSICIÓN (ver cabecera).
 
@@ -987,8 +1079,8 @@ export function VehicleModel3D({
                   ? "wheel-fl"
                   : "wheel-fr"
                 : izquierda
-                  ? "wheel-rl"
-                  : "wheel-rr",
+                ? "wheel-rl"
+                : "wheel-rr",
             );
             continue;
           }
@@ -1007,8 +1099,8 @@ export function VehicleModel3D({
                   ? "door-fl"
                   : "door-fr"
                 : izquierda
-                  ? "door-rl"
-                  : "door-rr",
+                ? "door-rl"
+                : "door-rr",
             );
             continue;
           }
@@ -1233,6 +1325,7 @@ export function VehicleModel3D({
       refrescarPaleta();
       relleno.color.copy(paleta.accent);
       materialHalo.color.copy(paleta.accent);
+      materialAnillo.color.copy(paleta.accent);
       const actuales = new Map(resaltadas);
       apiRef.current?.aplicarPiezas(Object.fromEntries(actuales));
       pedirRender();
