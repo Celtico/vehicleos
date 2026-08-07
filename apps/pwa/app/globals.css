@@ -22,7 +22,7 @@
   --c-text: 232 240 242;
   --c-silver: 200 210 214;
   --c-muted: 154 173 180;
-  --c-accent: 0 210 190;
+  --c-accent: 77 148 255;
   --c-warning: 255 176 32;
   --c-danger: 255 77 90;
   --c-ok: 56 224 125;
@@ -69,7 +69,7 @@
   --c-text: 13 22 24;
   --c-silver: 32 47 51;
   --c-muted: 85 104 110;
-  --c-accent: 0 119 108;
+  --c-accent: 21 87 176;
   --c-warning: 163 96 0;
   --c-danger: 200 16 46;
   --c-ok: 18 122 68;
@@ -143,11 +143,7 @@ body {
  */
 .encaje-suave {
   border: 0;
-  background: linear-gradient(
-    to bottom,
-    rgb(var(--c-panel) / calc(var(--c-panel-a) * 1.9)),
-    rgb(var(--c-panel) / calc(var(--c-panel-a) * 0.35))
-  );
+  background: transparent;
 }
 
 /*

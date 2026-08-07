@@ -99,7 +99,7 @@ export default function SettingsPage() {
                       Próximamente
                     </span>
                   ) : active ? (
-                    <span className="h-2 w-2 rounded-full bg-accent shadow-[0_0_6px_#00d2be]" />
+                    <span className="h-2 w-2 rounded-full bg-accent shadow-[0_0_6px_#4d94ff]" />
                   ) : null}
                 </div>
                 <p className="mt-1 text-xs text-muted">{p.detail}</p>

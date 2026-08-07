@@ -26,7 +26,7 @@ export interface FleetMapProps {
 }
 
 const COLOR = {
-  ok: "#00d2be",
+  ok: "#4d94ff",
   warning: "#f5a524",
   critical: "#ff4d5e",
 } as const;
