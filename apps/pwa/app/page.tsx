@@ -35,7 +35,7 @@ import { VehicleModel3DLazy } from "../components/VehicleModel3DLazy";
 import { useVehicleStore, type CarView, type HistoryPoint } from "../store/vehicle-store";
 
 /** Alto reservado al vehículo en el centro del cuadro (cenital y 3D). */
-const ALTO_VEHICULO = 236;
+const ALTO_VEHICULO = 262;
 
 /** Opciones del conmutador de vista del coche. */
 const VISTAS: { id: CarView; etiqueta: string }[] = [
