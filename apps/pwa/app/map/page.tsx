@@ -1,13 +1,39 @@
 "use client";
 
 /**
- * Mapa propio SIN servicios externos: SVG que dibuja la ruta GPS acumulada
- * del stream en vivo como polyline autoescalada, con el punto actual y su
- * rumbo. Nada de teselas ni claves de API.
+ * Mapa de ruta con dos modos según la conexión:
+ *
+ * - CON internet: mapa de calles real (MapLibre + teselas OSM/CARTO, ver
+ *   RouteMap) con la ruta del stream superpuesta.
+ * - SIN internet: el mapa propio de siempre — SVG que dibuja la ruta GPS
+ *   acumulada como polyline autoescalada, sin teselas ni claves de API.
+ *   En un coche sin cobertura la ruta se sigue viendo igual.
  */
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
+import dynamic from "next/dynamic";
 import { alfa, Card, MBUX } from "@vehicleos/ui";
 import { useVehicleStore } from "../../store/vehicle-store";
+
+// MapLibre toca window al arrancar: solo en cliente.
+const RouteMap = dynamic(() => import("../../components/RouteMap").then((m) => m.RouteMap), {
+  ssr: false,
+});
+
+/** Estado de conexión, reactivo a los eventos online/offline del navegador. */
+function useOnline(): boolean {
+  const [online, setOnline] = useState(true);
+  useEffect(() => {
+    const actualizar = () => setOnline(navigator.onLine);
+    actualizar();
+    window.addEventListener("online", actualizar);
+    window.addEventListener("offline", actualizar);
+    return () => {
+      window.removeEventListener("online", actualizar);
+      window.removeEventListener("offline", actualizar);
+    };
+  }, []);
+  return online;
+}
 
 const W = 900;
 const H = 520;
@@ -18,6 +44,7 @@ export default function MapPage() {
   const telemetry = useVehicleStore((s) => s.telemetry);
   const clearPath = useVehicleStore((s) => s.clearPath);
   const location = telemetry?.location;
+  const online = useOnline();
 
   // Proyección equirectangular local autoescalada a la caja del SVG.
   const projected = useMemo(() => {
@@ -65,7 +92,9 @@ export default function MapPage() {
       </div>
 
       <Card style={{ padding: 8, flex: 1, minHeight: 0, display: "flex" }}>
-        {projected ? (
+        {online ? (
+          <RouteMap path={path} location={location} />
+        ) : projected ? (
           <svg
             viewBox={`0 0 ${W} ${H}`}
             className="h-full w-full"
@@ -99,7 +128,7 @@ export default function MapPage() {
                 .map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`)
                 .join(" ")}
               fill="none"
-              stroke="#00d2be"
+              stroke="#4d94ff"
               strokeWidth={2.5}
               strokeLinejoin="round"
               strokeLinecap="round"
