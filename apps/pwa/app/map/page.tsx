@@ -6,7 +6,7 @@
  * rumbo. Nada de teselas ni claves de API.
  */
 import { useMemo } from "react";
-import { Card } from "@vehicleos/ui";
+import { alfa, Card, MBUX } from "@vehicleos/ui";
 import { useVehicleStore } from "../../store/vehicle-store";
 
 const W = 900;
@@ -51,8 +51,8 @@ export default function MapPage() {
   }, [path, location]);
 
   return (
-    <div className="flex flex-col gap-5 p-6">
-      <div className="flex items-center justify-between">
+    <div className="flex h-full flex-col gap-3 px-4 pb-2 pt-1">
+      <div className="flex shrink-0 items-center justify-between">
         <h1 className="text-xl font-medium tracking-[0.2em] text-silver">
           MAPA · RUTA EN VIVO
         </h1>
@@ -64,9 +64,13 @@ export default function MapPage() {
         </button>
       </div>
 
-      <Card style={{ padding: 8 }}>
+      <Card style={{ padding: 8, flex: 1, minHeight: 0, display: "flex" }}>
         {projected ? (
-          <svg viewBox={`0 0 ${W} ${H}`} className="h-auto w-full">
+          <svg
+            viewBox={`0 0 ${W} ${H}`}
+            className="h-full w-full"
+            preserveAspectRatio="xMidYMid meet"
+          >
             {/* Rejilla de referencia */}
             {Array.from({ length: 9 }, (_, i) => (
               <line
@@ -119,7 +123,7 @@ export default function MapPage() {
               <g
                 transform={`translate(${projected.current[0]}, ${projected.current[1]}) rotate(${location?.heading ?? 0})`}
               >
-                <circle r={12} fill="rgba(0,210,190,0.15)">
+                <circle r={12} fill={alfa("accent", 0.15)}>
                   <animate
                     attributeName="r"
                     values="10;16;10"
@@ -129,15 +133,15 @@ export default function MapPage() {
                 </circle>
                 <path
                   d="M0 -9 L6 7 L0 3.5 L-6 7 Z"
-                  fill="#00d2be"
-                  stroke="#04252b"
+                  fill={MBUX.accent}
+                  stroke="rgb(var(--c-bg))"
                   strokeWidth={1}
                 />
               </g>
             ) : null}
           </svg>
         ) : (
-          <div className="flex h-[420px] flex-col items-center justify-center gap-2">
+          <div className="flex flex-1 flex-col items-center justify-center gap-2">
             <p className="text-lg font-medium text-silver">Esperando señal GPS…</p>
             <p className="text-sm text-muted">
               La ruta se dibujará según el vehículo se mueva (prueba el escenario Ciudad o
@@ -148,7 +152,7 @@ export default function MapPage() {
       </Card>
 
       {/* Lecturas de posición */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid shrink-0 grid-cols-4 gap-3">
         <Readout label="Latitud" value={location ? location.lat.toFixed(5) : "—"} />
         <Readout label="Longitud" value={location ? location.lon.toFixed(5) : "—"} />
         <Readout
@@ -163,9 +167,11 @@ export default function MapPage() {
 
 function Readout({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl border border-linea/10 bg-linea/[0.03] px-4 py-3">
-      <p className="text-[10px] uppercase tracking-[0.2em] text-muted">{label}</p>
-      <p className="mt-1 font-mono text-lg font-light text-silver">{value}</p>
+    <div className="panel-cockpit rounded-xl px-4 py-2">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">
+        {label}
+      </p>
+      <p className="mt-0.5 font-mono text-lg font-medium text-silver">{value}</p>
     </div>
   );
 }

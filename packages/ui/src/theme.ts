@@ -27,6 +27,15 @@ export const MBUX = {
   panel: "rgb(var(--c-panel) / var(--c-panel-a))",
   /** Borde sutil de paneles. */
   border: "1px solid rgb(var(--c-border) / var(--c-border-a))",
+  /**
+   * Sombra de las tarjetas. Va en variable y no en literal porque una sombra
+   * negra al 45 %, que sobre fondo oscuro apenas se intuye, sobre fondo claro
+   * rodea cada tarjeta de un cerco gris.
+   */
+  panelShadow: "var(--c-sombra-panel, 0 8px 30px rgba(0,0,0,0.45))",
+  /** Velo superior de las tarjetas, el mismo que usa .panel-cockpit. */
+  panelSheen:
+    "linear-gradient(to bottom, rgb(var(--c-panel-luz, 255 255 255) / var(--c-panel-luz-a, 0.03)), transparent 62%)",
   /** Acento principal cian-turquesa MBUX. */
   accent: CSS("accent"),
   /** Acento atenuado (halos, pistas). */

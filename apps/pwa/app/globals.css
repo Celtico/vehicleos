@@ -36,6 +36,7 @@
   /* Realce superior de los paneles: apenas un velo. */
   --c-panel-luz: 255 255 255;
   --c-panel-luz-a: 0.03;
+  --c-sombra-panel: 0 8px 30px rgba(0, 0, 0, 0.45);
   --c-fondo-degradado: radial-gradient(
     120% 90% at 30% -10%,
     #0d181d 0%,
@@ -78,6 +79,9 @@
   --c-esfera-2: #e9eef0;
   --c-panel-luz: 255 255 255;
   --c-panel-luz-a: 0.6;
+  /* Sobre fondo claro una sombra negra al 45 % pone un cerco gris alrededor
+     de cada tarjeta; hace falta muchísima menos y teñida de azul. */
+  --c-sombra-panel: 0 6px 18px rgba(16, 29, 48, 0.07);
   --c-fondo-degradado: radial-gradient(
     120% 90% at 30% -10%,
     #ffffff 0%,

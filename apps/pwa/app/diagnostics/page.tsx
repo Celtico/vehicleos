@@ -10,11 +10,15 @@ import { explainDtc } from "@vehicleos/ai";
 import { Card } from "@vehicleos/ui";
 import { useVehicleStore } from "../../store/vehicle-store";
 
-const SEVERITY_STYLE: Record<string, { label: string; className: string }> = {
-  low: { label: "Leve", className: "bg-okgreen/15 text-okgreen" },
-  medium: { label: "Moderada", className: "bg-warn/15 text-warn" },
-  high: { label: "Grave", className: "bg-danger/15 text-danger" },
-  critical: { label: "Crítica", className: "bg-danger/25 text-danger" },
+const SEVERITY_STYLE: Record<string, { label: string; className: string; codigo: string }> = {
+  low: { label: "Leve", className: "bg-okgreen/15 text-okgreen", codigo: "text-okgreen" },
+  medium: { label: "Moderada", className: "bg-warn/15 text-warn", codigo: "text-warn" },
+  high: { label: "Grave", className: "bg-danger/15 text-danger", codigo: "text-danger" },
+  critical: {
+    label: "Crítica",
+    className: "bg-danger/25 text-danger",
+    codigo: "text-danger",
+  },
 };
 
 const STATUS_LABEL: Record<string, string> = {
@@ -85,7 +89,9 @@ export default function DiagnosticsPage() {
             <Card key={`${d.code}-${d.status}`}>
               <div className="flex flex-col gap-4">
                 <div className="flex flex-wrap items-center gap-3">
-                  <span className="font-mono text-2xl font-light text-accent">{d.code}</span>
+                  <span className={`font-mono text-2xl font-semibold ${sev.codigo}`}>
+                    {d.code}
+                  </span>
                   <span className="text-lg font-medium text-silver">{e.title}</span>
                   <span
                     className={`rounded-full px-3 py-0.5 text-[10px] uppercase tracking-widest ${sev.className}`}

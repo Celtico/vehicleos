@@ -6,7 +6,7 @@
  */
 export { useAnimatedNumber, clamp } from "./animation";
 export { describeArc, polarToCartesian } from "./arc";
-export { MBUX, zoneColor, type GaugeZone } from "./theme";
+export { MBUX, alfa, zoneColor, type GaugeZone } from "./theme";
 export { GaugeArc, type GaugeArcProps } from "./GaugeArc";
 export { SpeedGauge, type SpeedGaugeProps } from "./SpeedGauge";
 export { RpmGauge, type RpmGaugeProps } from "./RpmGauge";

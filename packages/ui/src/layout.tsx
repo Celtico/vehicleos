@@ -42,11 +42,11 @@ export function Card({ children, title, style }: CardProps) {
   return (
     <div
       style={{
-        background: MBUX.panel,
+        background: `${MBUX.panelSheen}, ${MBUX.panel}`,
         border: MBUX.border,
         borderRadius: 16,
         padding: 18,
-        boxShadow: "0 8px 30px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.04)",
+        boxShadow: MBUX.panelShadow,
         fontFamily: MBUX.font,
         ...style,
       }}

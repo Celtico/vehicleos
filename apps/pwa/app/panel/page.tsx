@@ -117,9 +117,11 @@ export default function PanelPage() {
   // ── Estados de error / sin configurar ───────────────────────
   if (!token) {
     return (
-      <div className="p-6">
-        <h1 className="mb-4 text-xl uppercase tracking-[0.3em] text-silver">Panel</h1>
-        <Card>
+      <div className="flex h-full flex-col px-4 pt-1">
+        <h1 className="mb-4 shrink-0 text-xl font-medium uppercase tracking-[0.2em] text-silver">
+          Flota
+        </h1>
+        <Card style={{ margin: "auto", maxWidth: 520, textAlign: "center" }}>
           <p className="text-sm text-silver">Falta el token de acceso.</p>
           <p className="mt-1 text-xs text-muted">
             El panel muestra los coches de tu cuenta, así que necesita autenticarse. Configura
@@ -133,9 +135,11 @@ export default function PanelPage() {
   if (vehiculos.isError) {
     const err = vehiculos.error;
     return (
-      <div className="p-6">
-        <h1 className="mb-4 text-xl uppercase tracking-[0.3em] text-silver">Panel</h1>
-        <Card>
+      <div className="flex h-full flex-col px-4 pt-1">
+        <h1 className="mb-4 shrink-0 text-xl font-medium uppercase tracking-[0.2em] text-silver">
+          Flota
+        </h1>
+        <Card style={{ margin: "auto", maxWidth: 520, textAlign: "center" }}>
           <p className="text-sm text-danger">No se pudo hablar con el backend.</p>
           <p className="mt-1 text-xs text-muted">
             {err instanceof ApiError ? err.message : String(err)}
@@ -152,7 +156,7 @@ export default function PanelPage() {
   return (
     <div className="flex flex-col gap-5 p-6">
       <div className="flex items-baseline justify-between">
-        <h1 className="text-xl uppercase tracking-[0.3em] text-silver">Panel de flota</h1>
+        <h1 className="text-xl font-medium uppercase tracking-[0.2em] text-silver">Flota</h1>
         <span className="text-[10px] uppercase tracking-[0.25em] text-muted">
           {lista.length} {lista.length === 1 ? "vehículo" : "vehículos"} · {sinReconocer.length}{" "}
           {sinReconocer.length === 1 ? "alerta" : "alertas"}
