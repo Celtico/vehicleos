@@ -16,6 +16,8 @@ apps/android-bridge/local.properties
 apps/android-bridge/**/build/
 *.apk
 *.aab
+# Excepción: el APK que la landing ofrece como descarga sí viaja en el repo.
+!apps/landing/public/vehicleos-bridge.apk
 
 # Entorno
 .env

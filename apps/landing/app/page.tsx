@@ -7,6 +7,14 @@
 import Image from "next/image";
 import { Cluster } from "../components/Cluster";
 
+/**
+ * Enlaces del producto. La landing es un export estático: van como
+ * constantes y no como variables de entorno en tiempo de ejecución.
+ */
+const URL_APP = "https://coche.serverscel.com";
+const URL_APK = "/vehicleos-bridge.apk";
+const URL_REPO = "https://gitwins.serverscel.com/cel/vehicleos";
+
 /** Capturas del producto, con su texto alternativo descriptivo. */
 const SHOTS = {
   dash: {
@@ -15,7 +23,7 @@ const SHOTS = {
   },
   diag: {
     src: "/img/diagnostics-fault.jpg",
-    alt: "Pantalla de diagnóstico: el código P0217 explicado como sobretemperatura del motor, con causa probable al 75 %, lista de causas, soluciones y la recomendación de detener el vehículo.",
+    alt: "Pantalla de diagnóstico: el código C0035 explicado como sensor de velocidad de la rueda delantera izquierda, con causa probable al 75 %, lista de causas, soluciones y si se puede seguir conduciendo.",
   },
   ai: {
     src: "/img/ai.jpg",
@@ -60,6 +68,7 @@ export default function Home() {
           <a href="#ia">Asistente</a>
           <a href="#flota">Flota</a>
           <a href="#limites">Límites</a>
+          <a href="#descargas">Descargas</a>
         </div>
       </nav>
 
@@ -81,9 +90,14 @@ export default function Home() {
                   funciona en la pantalla del salpicadero, en una tableta, en el móvil y en el
                   navegador del ordenador.
                 </p>
-                <a className="cta" href="#averia">
-                  Ver cómo funciona
-                </a>
+                <div className="cta-row">
+                  <a className="cta" href={URL_APP} target="_blank" rel="noopener">
+                    Abrir la aplicación
+                  </a>
+                  <a className="cta cta-ghost" href="#averia">
+                    Ver cómo funciona
+                  </a>
+                </div>
               </div>
               <Cluster />
             </div>
@@ -286,16 +300,47 @@ export default function Home() {
             </div>
           </section>
 
-          <section>
-            <span className="eyebrow">Código abierto</span>
+          {/* ── Descargas ────────────────────────────────── */}
+          <section id="descargas">
+            <span className="eyebrow">Descargas</span>
             <h2>Móntalo esta tarde</h2>
             <p className="lede" style={{ marginBlockStart: 22 }}>
               Arranca con el simulador incluido y tendrás el cuadro funcionando sin tocar el
-              coche ni levantar un servidor. Cuando quieras datos reales, enchufas el adaptador.
+              coche ni levantar un servidor. Cuando quieras datos reales, instala el puente
+              Android y enchufa el adaptador.
             </p>
-            <a className="cta" href="#averia">
-              Volver arriba
-            </a>
+            <div className="cards">
+              <div className="card">
+                <h3>La aplicación</h3>
+                <p>
+                  El cockpit funciona en el navegador y se instala como PWA en la pantalla del
+                  coche o la tableta.
+                </p>
+                <a className="cta" href={URL_APP} target="_blank" rel="noopener">
+                  Abrir la aplicación
+                </a>
+              </div>
+              <div className="card">
+                <h3>Puente Android</h3>
+                <p>
+                  El servicio que habla con el adaptador OBD por Bluetooth, BLE, USB o WiFi.
+                  Solo hace falta en el dispositivo enchufado al coche.
+                </p>
+                <a className="cta" href={URL_APK} download>
+                  Descargar APK
+                </a>
+                <p className="cta-nota">Android 8.0 o superior · 2,2 MB</p>
+              </div>
+              <div className="card">
+                <h3>Código fuente</h3>
+                <p>
+                  Todo el proyecto: cockpit, servidor, puente Android, protocolo y simulador.
+                </p>
+                <a className="cta cta-ghost" href={URL_REPO} target="_blank" rel="noopener">
+                  Ver el repositorio
+                </a>
+              </div>
+            </div>
           </section>
 
           <footer>
