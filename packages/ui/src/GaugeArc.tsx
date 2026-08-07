@@ -182,18 +182,27 @@ export function GaugeArc({
         <mask id={`${uid}-mascara`}>
           <rect x="0" y="0" width="200" height="200" fill={`url(#${uid}-fundido)`} />
         </mask>
+
+        {/* Bisel: un aro que recoge la luz arriba y se apaga abajo, no una
+            línea de grosor constante. A trazo plano, en tema claro el borde
+            es casi negro y encierra el reloj en un contorno duro. */}
+        <linearGradient id={`${uid}-bisel`} x1="0.3" y1="0" x2="0.7" y2="1">
+          <stop offset="0%" stopColor={`rgb(var(--c-border) / 0.34)`} />
+          <stop offset="45%" stopColor={`rgb(var(--c-border) / 0.16)`} />
+          <stop offset="100%" stopColor={`rgb(var(--c-border) / 0.06)`} />
+        </linearGradient>
       </defs>
 
       {/* Esfera */}
       <circle cx="100" cy="100" r={R_BISEL} fill={`url(#${uid}-esfera)`} />
 
-      {/* Bisel: circunferencia completa, muy tenue */}
+      {/* Bisel */}
       <circle
         cx="100"
         cy="100"
         r={R_BISEL}
         fill="none"
-        stroke={alfa("border", 0.55)}
+        stroke={`url(#${uid}-bisel)`}
         strokeWidth={1.2}
       />
 

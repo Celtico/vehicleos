@@ -54,9 +54,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   quede centrado de verdad y no se mueva cuando el reloj pasa
                   de "9:05" a "12:05". */}
               <header className="grid shrink-0 grid-cols-3 items-center px-4 py-2">
-                <span className="truncate text-sm font-medium text-silver">
+                <span className="truncate text-[15px] font-semibold tracking-[0.01em] text-silver">
                   Mercedes CLK 270 CDI
-                  <span className="ml-2 text-[11px] text-muted">W209 · 2005</span>
+                  <span className="ml-2 text-[11px] font-normal text-muted">W209 · 2005</span>
                 </span>
                 <div className="flex justify-center">
                   <ConnectionBadge />

@@ -249,7 +249,7 @@ export default function DashboardPage() {
             <div
               role="group"
               aria-label="Vista del vehículo"
-              className="panel-cockpit absolute right-0 top-0 z-10 flex items-center gap-0.5 rounded-full p-0.5"
+              className="panel-cockpit absolute bottom-0 right-0 z-10 flex items-center gap-0.5 rounded-full p-0.5"
             >
               {VISTAS.map((v) => {
                 const activa = v.id === carView;
@@ -334,15 +334,25 @@ export default function DashboardPage() {
           onSeeAll={() => router.push("/diagnostics")}
         />
 
-        <div className="flex items-center justify-around px-1">
-          <StatusLight kind="abs" status={t?.systems.abs ?? "unknown"} />
-          <StatusLight kind="esp" status={t?.systems.esp ?? "unknown"} />
-          <StatusLight kind="airbag" status={t?.systems.airbag ?? "unknown"} />
-          <StatusLight kind="engine" status={t?.systems.engine ?? "unknown"} />
+        {/* Los tres bloques arrancan con rótulo a la misma altura. Sin él,
+            la fila se leía como una cosa etiquetada y dos flotando. */}
+        <div className="flex flex-col px-1">
+          <span className="mb-3 text-[11.5px] font-semibold uppercase tracking-[0.1em] text-muted">
+            Sistemas
+          </span>
+          <div className="flex flex-1 items-center justify-around">
+            <StatusLight kind="abs" status={t?.systems.abs ?? "unknown"} />
+            <StatusLight kind="esp" status={t?.systems.esp ?? "unknown"} />
+            <StatusLight kind="airbag" status={t?.systems.airbag ?? "unknown"} />
+            <StatusLight kind="engine" status={t?.systems.engine ?? "unknown"} />
+          </div>
         </div>
 
-        <div className="flex flex-col justify-center px-1">
-          <div className="grid grid-cols-4">
+        <div className="flex flex-col px-1">
+          <span className="mb-3 text-[11.5px] font-semibold uppercase tracking-[0.1em] text-muted">
+            Viaje actual
+          </span>
+          <div className="grid flex-1 grid-cols-4 items-center">
             {[
               {
                 l: "Distancia",
