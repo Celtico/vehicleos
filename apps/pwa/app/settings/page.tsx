@@ -244,6 +244,34 @@ export default function SettingsPage() {
           </div>
         </div>
       </Card>
+
+      {/*
+        Atribución obligatoria por la licencia del modelo 3D (CC BY-NC-SA):
+        acreditar al autor allí donde se use. Ver public/models/ATRIBUCION.md.
+      */}
+      <p className="max-w-3xl text-[11px] leading-relaxed text-muted">
+        Vista 3D del vehículo:{" "}
+        <a
+          href="https://sketchfab.com/3d-models/2003-mercedes-benz-clk-55-amg-96c1c8f27333453db1cde651bc089708"
+          target="_blank"
+          rel="noreferrer"
+          className="text-silver underline decoration-white/20 underline-offset-2 hover:text-accent"
+        >
+          «2003 Mercedes-Benz CLK 55 AMG»
+        </a>{" "}
+        de <span className="text-silver">Ddiaz Design</span>, publicado en Sketchfab bajo
+        licencia{" "}
+        <a
+          href="https://creativecommons.org/licenses/by-nc-sa/4.0/"
+          target="_blank"
+          rel="noreferrer"
+          className="text-silver underline decoration-white/20 underline-offset-2 hover:text-accent"
+        >
+          CC BY-NC-SA 4.0
+        </a>
+        . El modelo se usa sin modificar; las piezas que no se ven desde fuera solo se ocultan
+        al dibujar.
+      </p>
     </div>
   );
 }
