@@ -21,6 +21,7 @@ import {
 import type { TelemetryBatch, TelemetryServerMessage } from "@vehicleos/shared";
 import type { Namespace, Socket } from "socket.io";
 import { rowToAlert } from "../alerts/alerts.service";
+import { socketIoPath } from "../api-prefix";
 import { corsCredentials, corsOrigin } from "../cors";
 import { JwtPayload } from "../auth/auth-user";
 import { VehiclesService } from "../vehicles/vehicles.service";
@@ -34,6 +35,9 @@ function vehicleRoom(vehicleId: string): string {
 
 @WebSocketGateway({
   namespace: "/telemetry",
+  // Acompaña al prefijo de la API: tras un proxy que sirve todo bajo /api,
+  // socket.io queda en /api/socket.io y el cliente usa esa misma ruta.
+  path: socketIoPath(),
   cors: { origin: corsOrigin(), credentials: corsCredentials() },
 })
 export class TelemetryGateway implements OnGatewayConnection {

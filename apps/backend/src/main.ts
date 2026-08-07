@@ -6,10 +6,16 @@ import { ValidationPipe, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
+import { apiPrefix } from "./api-prefix";
 import { corsCredentials, corsOrigin } from "./cors";
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
+
+  // Prefijo bajo el que cuelga toda la API. Vacío en desarrollo; "/api" al
+  // desplegar en el mismo dominio que el cockpit.
+  const prefijo = apiPrefix();
+  if (prefijo) app.setGlobalPrefix(prefijo.slice(1));
 
   // CORS para el panel web en desarrollo.
   app.enableCors({ origin: corsOrigin(), credentials: corsCredentials() });
@@ -27,7 +33,10 @@ async function bootstrap(): Promise<void> {
   const config = app.get(ConfigService);
   const port = Number(config.get<string>("PORT") ?? 3001);
   await app.listen(port);
-  Logger.log(`Backend de VehicleOS escuchando en http://localhost:${port}`, "Bootstrap");
+  Logger.log(
+    `Backend de VehicleOS escuchando en http://localhost:${port}${prefijo}`,
+    "Bootstrap",
+  );
 }
 
 void bootstrap();

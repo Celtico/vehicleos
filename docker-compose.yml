@@ -20,7 +20,8 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-vehicleos} -d ${POSTGRES_DB:-vehicleos}"]
+      test:
+        ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-vehicleos} -d ${POSTGRES_DB:-vehicleos}"]
       interval: 5s
       timeout: 3s
       retries: 20
@@ -39,6 +40,9 @@ services:
       # Debe coincidir con el origen desde el que se sirve el cockpit, o el
       # navegador bloqueará las peticiones.
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:7271}
+      # Prefijo bajo el que se sirve la API. Con "/api" el backend convive
+      # con el cockpit en el mismo dominio y desaparece el CORS.
+      API_PREFIX: ${API_PREFIX:-}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       PORT: 3001
     ports:
@@ -49,7 +53,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "node -e \"require('http').get('http://127.0.0.1:3001/users/me',r=>process.exit(r.statusCode===401?0:1)).on('error',()=>process.exit(1))\"",
+          'node -e "require(''http'').get(''http://127.0.0.1:3001''+(process.env.API_PREFIX||'''')+''/users/me'',r=>process.exit(r.statusCode===401?0:1)).on(''error'',()=>process.exit(1))"',
         ]
       interval: 10s
       timeout: 5s
