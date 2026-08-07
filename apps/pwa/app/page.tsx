@@ -32,16 +32,7 @@ import {
 import { DEFAULT_PROFILE } from "@vehicleos/shared";
 import { explainDtc, partsFromDtc } from "@vehicleos/ai";
 import { VehicleModel3DLazy } from "../components/VehicleModel3DLazy";
-import { useVehicleStore, type CarView, type HistoryPoint } from "../store/vehicle-store";
-
-/** Alto reservado al vehículo en el centro del cuadro (cenital y 3D). */
-const ALTO_VEHICULO = 262;
-
-/** Opciones del conmutador de vista del coche. */
-const VISTAS: { id: CarView; etiqueta: string }[] = [
-  { id: "top", etiqueta: "Cenital" },
-  { id: "3d", etiqueta: "3D" },
-];
+import { useVehicleStore, type HistoryPoint } from "../store/vehicle-store";
 
 /**
  * Franja de temperatura en la que se tiñe el vano motor.
@@ -89,8 +80,6 @@ export default function DashboardPage() {
   const t = useVehicleStore((s) => s.telemetry);
   const dtc = useVehicleStore((s) => s.dtc);
   const history = useVehicleStore((s) => s.history);
-  const carView = useVehicleStore((s) => s.carView);
-  const setCarView = useVehicleStore((s) => s.setCarView);
   const parts = useMemo(() => partsFromDtc(dtc), [dtc]);
 
   /** Tocar una pieza averiada abre su diagnóstico; una sana no hace nada. */
@@ -161,13 +150,36 @@ export default function DashboardPage() {
       : `0:${String(viaje.minutos).padStart(2, "0")}`;
 
   return (
-    <div className="flex h-full flex-col gap-2 px-4 pb-1 pt-4">
+    <div className="relative isolate flex h-full flex-col gap-2 px-4 pb-1 pt-4">
+      {/* ── Vista 3D del coche: FONDO de todo el cuadro ─────────
+          Va en una capa absoluta con z negativo: se pinta sobre el degradado
+          del cockpit pero debajo de relojes y magnitudes. */}
+      <div className="absolute inset-0 -z-10">
+        <VehicleModel3DLazy
+          height="100%"
+          parts={parts}
+          engineHeat={engineHeat}
+          onPartClick={abrirPieza}
+          fallback={
+            <VehicleModel
+              size={300}
+              orientation="left"
+              iconic
+              parts={parts}
+              engineHeat={engineHeat}
+              onPartClick={abrirPieza}
+            />
+          }
+        />
+      </div>
+
       {/* ── Fila principal: velocidad · coche · régimen ───────── */}
       <div className="flex min-h-0 flex-1 items-stretch gap-2">
-        {/* Velocímetro, con el limitador debajo */}
-        <div className="flex shrink-0 flex-col items-center justify-center gap-1.5">
+        {/* Velocímetro, con el limitador debajo. `relative left-*`: los dos
+            relojes se acercan al centro sin alterar el reparto del flex. */}
+        <div className="relative left-6 flex shrink-0 flex-col items-center justify-center gap-1.5">
           <SpeedGauge speed={t?.speed ?? 0} size={300} max={DEFAULT_PROFILE.maxSpeed} />
-          <div className="encaje-suave flex items-center gap-3 rounded-xl px-4 py-1.5">
+          <div className="encaje-suave relative top-[-50px] flex items-center gap-3 rounded-xl px-4 py-1.5">
             <svg viewBox="0 0 24 24" className="h-6 w-6 shrink-0 text-accent" {...trazo}>
               <circle cx="12" cy="13.5" r="7" />
               <path d="M12 10v3.5l2.2 1.2M9.5 3.5h5" />
@@ -194,8 +206,6 @@ export default function DashboardPage() {
               value={t?.coolantTemp ?? 0}
               unit="°C"
               max={130}
-              warn={100}
-              danger={105}
               icon={
                 <svg viewBox="0 0 24 24" className="h-[30px] w-[30px]" {...trazo}>
                   <path d="M10 13.5V5a2 2 0 1 1 4 0v8.5a4 4 0 1 1-4 0z" />
@@ -257,71 +267,19 @@ export default function DashboardPage() {
             />
           </div>
 
-          {/* El coche, con la pieza averiada resaltada */}
-          <div className="relative flex min-h-0 flex-1 items-center justify-center">
-            {/* Conmutador de vista: discreto, arriba a la derecha, sin
-                robarle alto al coche (va superpuesto). */}
-            <div
-              role="group"
-              aria-label="Vista del vehículo"
-              className="panel-cockpit absolute bottom-0 right-0 z-10 flex items-center gap-0.5 rounded-full p-0.5"
-            >
-              {VISTAS.map((v) => {
-                const activa = v.id === carView;
-                return (
-                  <button
-                    key={v.id}
-                    onClick={() => setCarView(v.id)}
-                    aria-pressed={activa}
-                    className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] transition-colors ${
-                      activa ? "bg-accent/15 text-accent" : "text-muted hover:text-silver"
-                    }`}
-                  >
-                    {v.etiqueta}
-                  </button>
-                );
-              })}
-            </div>
-
-            {carView === "3d" ? (
-              <VehicleModel3DLazy
-                height={ALTO_VEHICULO}
-                parts={parts}
-                engineHeat={engineHeat}
-                onPartClick={abrirPieza}
-                fallback={
-                  <VehicleModel
-                    size={300}
-                    orientation="left"
-                    iconic
-                    parts={parts}
-                    engineHeat={engineHeat}
-                    onPartClick={abrirPieza}
-                  />
-                }
-              />
-            ) : (
-              <VehicleModel
-                size={300}
-                orientation="left"
-                iconic
-                parts={parts}
-                engineHeat={engineHeat}
-                onPartClick={abrirPieza}
-              />
-            )}
-          </div>
+          {/* Hueco central: el coche se ve a través, en la capa de fondo. */}
+          <div className="min-h-0 flex-1" />
         </div>
 
         {/* Cuentavueltas, con el consumo debajo */}
-        <div className="flex shrink-0 flex-col items-center justify-center gap-1.5">
+        <div className="relative right-6 flex shrink-0 flex-col items-center justify-center gap-1.5">
           <RpmGauge
             rpm={t?.rpm ?? 0}
             size={300}
             max={DEFAULT_PROFILE.maxRpm}
             redline={DEFAULT_PROFILE.redlineRpm}
           />
-          <div className="encaje-suave flex items-center gap-3 rounded-xl px-4 py-1.5">
+          <div className="encaje-suave relative top-[-50px] flex items-center gap-3 rounded-xl px-4 py-1.5">
             <svg viewBox="0 0 24 24" className="h-6 w-6 shrink-0 text-accent" {...trazo}>
               <path d="M5 20V5a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v15M3.5 20h11M13 10.5h3a2 2 0 0 1 2 2v3.5a1.5 1.5 0 0 0 3 0V9l-2.5-2.5" />
             </svg>
@@ -407,21 +365,26 @@ export default function DashboardPage() {
                 ),
               },
             ].map((d, i) => (
-              <div key={d.l} className="relative flex min-w-0 flex-col items-center px-1">
+              <div
+                key={d.l}
+                className="relative flex h-[78px] min-w-0 flex-col items-center px-1"
+              >
                 {i > 0 ? (
                   <span aria-hidden="true" className="filete-suave absolute inset-y-1 left-0" />
                 ) : null}
                 <svg viewBox="0 0 24 24" className="h-7 w-7 text-accent" {...trazo}>
                   {d.i}
                 </svg>
-                <span className="mt-1 max-w-full truncate text-[10px] font-semibold uppercase tracking-[0.04em] text-accent">
-                  {d.l}
-                </span>
-                <span className="flex items-baseline gap-1">
+                {/* Valor en medio y rótulo al pie: así el texto queda a la
+                    misma altura que los rótulos de los testigos de al lado. */}
+                <span className="flex flex-1 items-center gap-1">
                   <span className="text-xl font-semibold leading-tight tabular-nums text-silver">
                     {d.v}
                   </span>
                   <span className="text-[10px] text-muted">{d.u}</span>
+                </span>
+                <span className="max-w-full truncate text-[10px] font-semibold uppercase tracking-[0.04em] text-accent">
+                  {d.l}
                 </span>
               </div>
             ))}
