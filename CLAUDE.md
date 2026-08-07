@@ -18,6 +18,8 @@ pnpm --filter @vehicleos/landing dev   # marketing site at localhost:3002 (stati
 pnpm --filter @vehicleos/backend dev   # API at localhost:3001 (needs Postgres: docker compose up -d in apps/backend, then pnpm prisma:migrate)
 ```
 
+Full stack in Docker: `cp .env.example .env` (set POSTGRES_PASSWORD and JWT_SECRET), then `docker compose up -d --build`. Dockerfiles live in `docker/`. Prisma migrations run automatically on container start. `PUBLIC_API_URL`/`PUBLIC_WS_URL` are baked into the PWA bundle at build time, so changing them requires `docker compose build pwa`, and `CORS_ORIGIN` must match the cockpit's origin.
+
 Android bridge (not part of pnpm/turbo): `cd apps/android-bridge && ./gradlew assembleDebug`.
 
 Run a single package's tests: `pnpm --filter @vehicleos/vehicle-simulator test`.

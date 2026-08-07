@@ -39,6 +39,28 @@ PWA → @vehicleos/vehicle-sdk → Vehicle Bridge (Android) → Bluetooth/BLE/US
   (arranque en frío, ciudad, autopista, sobrecalentamiento, modo emergencia,
   ABS/ESP averiado, fallo de carga…).
 
+## Despliegue con Docker
+
+Para un servidor, todo el conjunto se levanta con un solo comando:
+
+```bash
+cp .env.example .env     # define POSTGRES_PASSWORD y JWT_SECRET
+docker compose up -d --build
+```
+
+Deja la landing en el puerto 8080, el cockpit en el 3000 y la API en el 3001. La base de datos **no se publica al exterior**: solo la ve el backend
+por la red interna. Las migraciones de Prisma se aplican solas al arrancar,
+así que un despliegue nuevo no necesita pasos manuales.
+
+Dos cosas que suelen dar problemas y conviene saber de antemano:
+
+- `PUBLIC_API_URL` y `PUBLIC_WS_URL` son las direcciones a las que llegará
+  **el navegador del usuario**, no nombres internos de Docker. Next.js las
+  incrusta en el JavaScript durante la compilación, así que cambiarlas
+  obliga a reconstruir la imagen del cockpit (`docker compose build pwa`).
+- `CORS_ORIGIN` debe coincidir con el origen desde el que se sirve el
+  cockpit, o el navegador bloqueará las peticiones al backend.
+
 ## Puesta en marcha
 
 Requisitos: Node ≥ 20, pnpm 9, Docker (para PostgreSQL), Android SDK (solo para el bridge).

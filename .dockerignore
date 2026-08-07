@@ -1,0 +1,18 @@
+# Lo que nunca debe entrar en el contexto de build: acelera mucho la
+# construcción y evita filtrar secretos dentro de una imagen.
+node_modules
+**/node_modules
+.git
+.turbo
+**/.turbo
+**/dist
+**/.next
+**/out
+apps/android-bridge
+.claude
+.idea
+*.log
+coverage
+.env
+**/.env
+!.env.example

@@ -1,0 +1,84 @@
+# VehicleOS al completo: base de datos, backend, cockpit y landing.
+#
+#   cp .env.example .env     # y edita los valores
+#   docker compose up -d --build
+#
+# Puertos por defecto: landing 8080, cockpit 3000, API 3001.
+# La base de datos NO se publica al exterior a propósito: solo la ve el
+# backend por la red interna.
+
+name: vehicleos
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-vehicleos}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?define POSTGRES_PASSWORD en .env}
+      POSTGRES_DB: ${POSTGRES_DB:-vehicleos}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-vehicleos} -d ${POSTGRES_DB:-vehicleos}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  backend:
+    build:
+      context: .
+      dockerfile: docker/backend.Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-vehicleos}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-vehicleos}
+      JWT_SECRET: ${JWT_SECRET:?define JWT_SECRET en .env}
+      # Debe coincidir con el origen desde el que se sirve el cockpit, o el
+      # navegador bloqueará las peticiones.
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      PORT: 3001
+    ports:
+      - "${BACKEND_PORT:-3001}:3001"
+    healthcheck:
+      # 401 es la respuesta correcta de una ruta protegida sin token: prueba
+      # que el servidor está sirviendo, que es lo que se quiere saber.
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"require('http').get('http://127.0.0.1:3001/users/me',r=>process.exit(r.statusCode===401?0:1)).on('error',()=>process.exit(1))\"",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+
+  pwa:
+    build:
+      context: .
+      dockerfile: docker/pwa.Dockerfile
+      args:
+        # Se incrustan en el JavaScript del navegador durante el build, así
+        # que tienen que ser las URL públicas a las que llegará el usuario,
+        # no nombres internos de la red de Docker.
+        NEXT_PUBLIC_API_URL: ${PUBLIC_API_URL:-http://localhost:3001}
+        NEXT_PUBLIC_WS_URL: ${PUBLIC_WS_URL:-ws://localhost:3001/telemetry}
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "${PWA_PORT:-3000}:3000"
+
+  landing:
+    build:
+      context: .
+      dockerfile: docker/landing.Dockerfile
+    restart: unless-stopped
+    ports:
+      - "${LANDING_PORT:-8080}:80"
+
+volumes:
+  pgdata:

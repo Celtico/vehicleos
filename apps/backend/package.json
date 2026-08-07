@@ -1,7 +1,7 @@
 {
   "name": "@vehicleos/backend",
   "version": "0.1.0",
-  "description": "API NestJS de VehicleOS: autenticación, vehículos, telemetría en tiempo real, viajes, alertas y asistente IA",
+  "description": "API NestJS de VehicleOS: autenticaci\u00f3n, veh\u00edculos, telemetr\u00eda en tiempo real, viajes, alertas y asistente IA",
   "private": true,
   "main": "dist/main.js",
   "scripts": {
@@ -33,6 +33,7 @@
     "class-validator": "^0.14.1",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
+    "prisma": "^5.22.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "socket.io": "^4.8.1"
@@ -49,7 +50,6 @@
     "@typescript-eslint/parser": "^7.18.0",
     "eslint": "^8.57.1",
     "jest": "^29.7.0",
-    "prisma": "^5.22.0",
     "ts-jest": "^29.2.5",
     "typescript": "^5.5.4"
   },
