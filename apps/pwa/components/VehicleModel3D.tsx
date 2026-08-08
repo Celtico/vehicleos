@@ -812,7 +812,7 @@ export function VehicleModel3D({
         if (original.envMapIntensity !== undefined) {
           m.envMapIntensity = original.envMapIntensity * (1 - fuerza * 0.75);
         }
-        const mapaDeseado = fuerza > 0.5 ? null : original.map ?? null;
+        const mapaDeseado = fuerza > 0.5 ? null : (original.map ?? null);
         if (m.map !== mapaDeseado) {
           m.map = mapaDeseado;
           m.needsUpdate = true;
@@ -1079,8 +1079,8 @@ export function VehicleModel3D({
                   ? "wheel-fl"
                   : "wheel-fr"
                 : izquierda
-                ? "wheel-rl"
-                : "wheel-rr",
+                  ? "wheel-rl"
+                  : "wheel-rr",
             );
             continue;
           }
@@ -1099,8 +1099,8 @@ export function VehicleModel3D({
                   ? "door-fl"
                   : "door-fr"
                 : izquierda
-                ? "door-rl"
-                : "door-rr",
+                  ? "door-rl"
+                  : "door-rr",
             );
             continue;
           }

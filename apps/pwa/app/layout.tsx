@@ -45,37 +45,37 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {/* Marca el tema día/noche en <html>; no pinta nada. */}
           <DaylightMode />
           <TabletGate>
-          <div
-            className="flex h-[100dvh] overflow-hidden"
-            style={{
-              background: "var(--c-fondo-degradado)",
-            }}
-          >
-            <div className="flex min-w-0 flex-1 flex-col">
-              {/* Barra superior: identificación del coche y estado. */}
-              {/* Tres zonas de ancho igual para que el estado de la conexión
+            <div
+              className="flex h-[100dvh] overflow-hidden"
+              style={{
+                background: "var(--c-fondo-degradado)",
+              }}
+            >
+              <div className="flex min-w-0 flex-1 flex-col">
+                {/* Barra superior: identificación del coche y estado. */}
+                {/* Tres zonas de ancho igual para que el estado de la conexión
                   quede centrado de verdad y no se mueva cuando el reloj pasa
                   de "9:05" a "12:05". */}
-              <header className="grid shrink-0 grid-cols-3 items-center px-4 py-2">
-                <span className="truncate text-base font-semibold tracking-[0.01em] text-silver">
-                  Mercedes CLK 270 CDI
-                  <span className="ml-2 text-[11px] font-normal text-muted">W209 · 2004</span>
-                </span>
-                <div className="flex items-center justify-center gap-4">
-                  <ConnectionBadge />
-                  <FaultBadge />
-                </div>
-                <div className="flex items-center justify-end gap-5">
-                  <ThemeSwitch />
-                  <Clock />
-                </div>
-              </header>
-              <main className="min-h-0 flex-1 overflow-y-auto">{children}</main>
-              <BottomNav />
+                <header className="grid shrink-0 grid-cols-3 items-center px-4 py-2">
+                  <span className="truncate text-base font-semibold tracking-[0.01em] text-silver">
+                    Mercedes CLK 270 CDI
+                    <span className="ml-2 text-[11px] font-normal text-muted">W209 · 2004</span>
+                  </span>
+                  <div className="flex items-center justify-center gap-4">
+                    <ConnectionBadge />
+                    <FaultBadge />
+                  </div>
+                  <div className="flex items-center justify-end gap-5">
+                    <ThemeSwitch />
+                    <Clock />
+                  </div>
+                </header>
+                <main className="min-h-0 flex-1 overflow-y-auto">{children}</main>
+                <BottomNav />
+              </div>
+              {/* Avisos por encima de todo, visibles en cualquier pantalla. */}
+              <CockpitNotifications />
             </div>
-            {/* Avisos por encima de todo, visibles en cualquier pantalla. */}
-            <CockpitNotifications />
-          </div>
           </TabletGate>
           <ServiceWorkerRegister />
         </Providers>

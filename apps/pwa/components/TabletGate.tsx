@@ -53,9 +53,8 @@ export function TabletGate({ children }: { children: React.ReactNode }) {
         Entra desde una tablet
       </h1>
       <p className="max-w-sm text-sm leading-relaxed text-muted">
-        VehicleOS es el cuadro de instrumentos del coche: está diseñado para la
-        pantalla del vehículo o una tablet en horizontal, y en esta pantalla no
-        cabe.
+        VehicleOS es el cuadro de instrumentos del coche: está diseñado para la pantalla del
+        vehículo o una tablet en horizontal, y en esta pantalla no cabe.
       </p>
     </div>
   );
