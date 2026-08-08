@@ -92,13 +92,13 @@ const ELEVACION = THREE.MathUtils.degToRad(0);
  * el FONDO del cuadro entero: el coche se queda pequeño y con aire para que
  * los relojes no lo tapen.
  */
-const MARGEN_ENCUADRE = 1.7;
+const MARGEN_ENCUADRE = 1.6;
 
 /**
  * Cuánto sube la cámara (en metros de escena, el coche mide 4 de largo) para
  * que el coche quede por debajo del centro de la pantalla.
  */
-const DESCENSO_COCHE = 0.1;
+const DESCENSO_COCHE = 0.3;
 
 /** Vista inicial: tres cuartos delantero por el lado del conductor. */
 const GIRO_INICIAL = -0.48;
@@ -662,7 +662,7 @@ export function VehicleModel3D({
     const hdri = crearEntornoEstudio();
     const entorno = pmrem.fromEquirectangular(hdri).texture;
     scene.environment = entorno;
-    scene.environmentIntensity = 0.1;
+    scene.environmentIntensity = 0.03;
     hdri.dispose();
 
     /* --- Luces ---------------------------------------------------------- */

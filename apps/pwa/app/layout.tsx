@@ -59,7 +59,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <header className="grid shrink-0 grid-cols-3 items-center px-4 py-2">
                 <span className="truncate text-base font-semibold tracking-[0.01em] text-silver">
                   Mercedes CLK 270 CDI
-                  <span className="ml-2 text-[11px] font-normal text-muted">W209 · 2005</span>
+                  <span className="ml-2 text-[11px] font-normal text-muted">W209 · 2004</span>
                 </span>
                 <div className="flex items-center justify-center gap-4">
                   <ConnectionBadge />
