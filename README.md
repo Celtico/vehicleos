@@ -102,6 +102,11 @@ Sin esas variables los builds son los de siempre: la landing en la raíz y el
 cockpit como servidor autocontenido para Docker. En el repositorio de GitHub
 hay que elegir una vez «GitHub Actions» en Settings → Pages → Source.
 
+Con un dominio propio (Settings → Pages → Custom domain) el sitio pasa a
+servirse desde la raíz y el workflow lo detecta solo: la landing queda en `/`
+y el cockpit en `/cockpit/`. Hay que relanzar el workflow después de poner o
+quitar el dominio, porque la subruta se incrusta al compilar.
+
 ## Puesta en marcha
 
 Requisitos: Node ≥ 20, pnpm 9, Docker (para PostgreSQL), Android SDK (solo para el bridge).

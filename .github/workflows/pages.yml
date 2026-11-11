@@ -22,10 +22,13 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      SITE_BASE: /${{ github.event.repository.name }}
     steps:
       - uses: actions/checkout@v4
+      # Dónde se sirve el sitio: "/<repositorio>" en celtico.github.io, vacío
+      # si el repositorio tiene un dominio propio (Settings → Pages → Custom
+      # domain), que lo sirve desde la raíz.
+      - id: pages
+        uses: actions/configure-pages@v5
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
@@ -40,13 +43,13 @@ jobs:
       - name: Landing
         run: pnpm --filter @vehicleos/landing build
         env:
-          BASE_PATH: ${{ env.SITE_BASE }}
-          NEXT_PUBLIC_APP_URL: ${{ env.SITE_BASE }}/cockpit/
+          BASE_PATH: ${{ steps.pages.outputs.base_path }}
+          NEXT_PUBLIC_APP_URL: ${{ steps.pages.outputs.base_path }}/cockpit/
       - name: Cockpit (simulador)
         run: pnpm --filter @vehicleos/pwa build
         env:
           STATIC_EXPORT: "1"
-          BASE_PATH: ${{ env.SITE_BASE }}/cockpit
+          BASE_PATH: ${{ steps.pages.outputs.base_path }}/cockpit
       - name: Juntar el sitio
         run: |
           mkdir -p site
