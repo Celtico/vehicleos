@@ -8,28 +8,36 @@ import Image from "next/image";
 import { Cluster } from "../components/Cluster";
 
 /**
- * Enlaces del producto. La landing es un export estático: van como
- * constantes y no como variables de entorno en tiempo de ejecución.
+ * Subruta desde la que se sirve la landing (vacía en la raíz del dominio).
+ * Los ficheros de `public/` hay que pedirlos con ella por delante.
  */
-const URL_APP = "https://coche.serverscel.com";
-const URL_APK = "/vehicleos-bridge.apk";
+const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+
+/**
+ * Enlaces del producto. La landing es un export estático: se fijan al
+ * compilar, no en tiempo de ejecución. `NEXT_PUBLIC_APP_URL` permite apuntar
+ * el botón del cockpit a otra instalación (en GitHub Pages, al cockpit con
+ * simulador publicado al lado).
+ */
+const URL_APP = process.env.NEXT_PUBLIC_APP_URL ?? "https://coche.serverscel.com";
+const URL_APK = `${BASE}/vehicleos-bridge.apk`;
 
 /** Capturas del producto, con su texto alternativo descriptivo. */
 const SHOTS = {
   dash: {
-    src: "/img/dash-c0035.jpg",
+    src: `${BASE}/img/dash-c0035.jpg`,
     alt: "Cuadro de VehicleOS: la rueda delantera izquierda aparece resaltada en rojo tras detectarse el código C0035, con un aviso emergente en la esquina superior derecha.",
   },
   diag: {
-    src: "/img/diagnostics-c0035.jpg",
+    src: `${BASE}/img/diagnostics-c0035.jpg`,
     alt: "Pantalla de diagnóstico: el código C0035 explicado como sensor de velocidad de la rueda delantera izquierda, con causa probable al 75 %, lista de causas, soluciones y si se puede seguir conduciendo.",
   },
   ai: {
-    src: "/img/ai-c0035.jpg",
+    src: `${BASE}/img/ai-c0035.jpg`,
     alt: "Pantalla del asistente con preguntas sugeridas y una respuesta sobre el código activo.",
   },
   panel: {
-    src: "/img/panel.jpg",
+    src: `${BASE}/img/panel.jpg`,
     alt: "Panel de flota con tres vehículos, mapa de posiciones con marcadores de color según gravedad, y lista de alertas pendientes de reconocer.",
   },
 } as const;

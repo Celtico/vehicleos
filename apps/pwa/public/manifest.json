@@ -2,9 +2,8 @@
   "name": "VehicleOS Cockpit",
   "short_name": "VehicleOS",
   "description": "Cockpit digital del vehículo: instrumentación, diagnóstico, mantenimiento y asistente",
-  "id": "/",
-  "start_url": "/",
-  "scope": "/",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "orientation": "landscape",
   "background_color": "#05080a",
@@ -12,13 +11,13 @@
   "lang": "es",
   "icons": [
     {
-      "src": "/icons/icon-192.png",
+      "src": "icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icons/icon-512.png",
+      "src": "icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"

@@ -9,7 +9,16 @@
  */
 // v2: iconos regenerados en azul; el nombre nuevo invalida la caché antigua.
 const STATIC_CACHE = "vehicleos-static-v2";
-const PRECACHE = ["/", "/manifest.json", "/icons/icon-192.png", "/icons/icon-512.png"];
+// Carpeta desde la que se sirve el cockpit, con barra final: "/" en dominio
+// propio, "/<repositorio>/cockpit/" en GitHub Pages. Sale del alcance del
+// propio service worker, así el fichero vale igual en los dos sitios.
+const BASE = new URL(self.registration.scope).pathname;
+const PRECACHE = [
+  BASE,
+  `${BASE}manifest.json`,
+  `${BASE}icons/icon-192.png`,
+  `${BASE}icons/icon-512.png`,
+];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -43,9 +52,9 @@ self.addEventListener("fetch", (event) => {
   if (url.pathname.startsWith("/api")) return;
 
   const isStatic =
-    url.pathname.startsWith("/_next/static") ||
-    url.pathname.startsWith("/icons/") ||
-    url.pathname === "/manifest.json";
+    url.pathname.startsWith(`${BASE}_next/static`) ||
+    url.pathname.startsWith(`${BASE}icons/`) ||
+    url.pathname === `${BASE}manifest.json`;
 
   if (isStatic) {
     // Cache-first para estáticos versionados.
@@ -72,7 +81,7 @@ self.addEventListener("fetch", (event) => {
           caches.open(STATIC_CACHE).then((cache) => cache.put(request, copy));
           return response;
         })
-        .catch(() => caches.match(request).then((cached) => cached || caches.match("/"))),
+        .catch(() => caches.match(request).then((cached) => cached || caches.match(BASE))),
     );
   }
 });

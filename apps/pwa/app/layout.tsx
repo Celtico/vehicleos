@@ -17,18 +17,19 @@ import { Providers } from "../components/Providers";
 import { ServiceWorkerRegister } from "../components/ServiceWorkerRegister";
 import { BottomNav } from "../components/BottomNav";
 import { TabletGate } from "../components/TabletGate";
+import { conBase } from "../lib/base";
 
 export const metadata: Metadata = {
   title: "VehicleOS Cockpit",
   description:
     "Cockpit digital del vehículo: instrumentación, diagnóstico, mantenimiento, viajes y asistente",
-  manifest: "/manifest.json",
+  manifest: conBase("/manifest.json"),
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
     title: "VehicleOS",
   },
-  icons: { icon: "/icons/icon-192.png", apple: "/icons/icon-192.png" },
+  icons: { icon: conBase("/icons/icon-192.png"), apple: conBase("/icons/icon-192.png") },
 };
 
 export const viewport: Viewport = {

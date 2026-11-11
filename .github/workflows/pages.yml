@@ -1,0 +1,72 @@
+# Publica en GitHub Pages la landing y, en /cockpit, el cockpit con simulador.
+# No hay backend: es una demo estática. El CI completo sigue en GitLab
+# (.gitlab-ci.yml); este workflow solo construye lo que se publica.
+#
+# Una sola vez en el repositorio: Settings → Pages → Source: "GitHub Actions".
+name: GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      SITE_BASE: /${{ github.event.repository.name }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      # Solo la landing, el cockpit y los paquetes de los que dependen:
+      # el backend y sus dependencias no hacen falta para la demo.
+      - run: pnpm install --frozen-lockfile --filter "@vehicleos/landing..." --filter "@vehicleos/pwa..."
+      # Los paquetes compilan a dist/ y las apps consumen ese resultado.
+      - run: pnpm turbo run build --filter "@vehicleos/pwa^..."
+      - run: pnpm turbo run test --filter "@vehicleos/pwa..."
+      - name: Landing
+        run: pnpm --filter @vehicleos/landing build
+        env:
+          BASE_PATH: ${{ env.SITE_BASE }}
+          NEXT_PUBLIC_APP_URL: ${{ env.SITE_BASE }}/cockpit/
+      - name: Cockpit (simulador)
+        run: pnpm --filter @vehicleos/pwa build
+        env:
+          STATIC_EXPORT: "1"
+          BASE_PATH: ${{ env.SITE_BASE }}/cockpit
+      - name: Juntar el sitio
+        run: |
+          mkdir -p site
+          cp -r apps/landing/out/. site/
+          mkdir -p site/cockpit
+          cp -r apps/pwa/out/. site/cockpit/
+          # Al volver al cuadro desde otra pantalla, Next pide los datos de la
+          # ruta raíz en "<subruta>.txt", un nivel por encima de la carpeta
+          # del cockpit. Sin esta copia responde 404 y recarga la página entera.
+          cp apps/pwa/out/index.txt site/cockpit.txt
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

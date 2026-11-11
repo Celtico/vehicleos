@@ -85,6 +85,23 @@ Dos cosas que suelen dar problemas y conviene saber de antemano:
 - `CORS_ORIGIN` debe coincidir con el origen desde el que se sirve el
   cockpit, o el navegador bloqueará las peticiones al backend.
 
+### Demo estática en GitHub Pages
+
+El workflow `.github/workflows/pages.yml` publica en cada push a `main` la
+landing y, en `/cockpit`, el cockpit funcionando solo con el simulador: no hay
+backend, así que no envía telemetría ni abre viajes en servidor, y el
+asistente responde con el diagnóstico local.
+
+```bash
+# Lo mismo que hace el workflow, a mano
+BASE_PATH=/vehicleos NEXT_PUBLIC_APP_URL=/vehicleos/cockpit/ pnpm --filter @vehicleos/landing build
+STATIC_EXPORT=1 BASE_PATH=/vehicleos/cockpit pnpm --filter @vehicleos/pwa build
+```
+
+Sin esas variables los builds son los de siempre: la landing en la raíz y el
+cockpit como servidor autocontenido para Docker. En el repositorio de GitHub
+hay que elegir una vez «GitHub Actions» en Settings → Pages → Source.
+
 ## Puesta en marcha
 
 Requisitos: Node ≥ 20, pnpm 9, Docker (para PostgreSQL), Android SDK (solo para el bridge).

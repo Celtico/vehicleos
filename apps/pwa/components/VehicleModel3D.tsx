@@ -61,6 +61,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import type { PartSeverity, VehiclePartId } from "@vehicleos/ui";
+import { conBase } from "../lib/base";
 
 export interface VehicleModel3DProps {
   /** Estado por pieza; las ausentes se consideran "ok". */
@@ -79,7 +80,7 @@ export interface VehicleModel3DProps {
 /* Constantes                                                                  */
 /* -------------------------------------------------------------------------- */
 
-const MODEL_URL = "/models/clk-w209.glb";
+const MODEL_URL = conBase("/models/clk-w209.glb");
 
 /** Largo al que se normaliza el coche; el .glb viene a escala 1/100. */
 const LARGO_OBJETIVO = 4;

@@ -45,5 +45,6 @@ Run a single package's tests: `pnpm --filter @vehicleos/vehicle-simulator test`.
 - Comments/JSDoc/READMEs in Spanish.
 - Tests colocated as `*.test.ts` (vitest) in packages; backend uses jest.
 - `apps/landing` is the marketing site: a separate static-export Next.js app, not part of the cockpit. Its screenshots in `public/img` are real product captures — regenerate them when the UI changes rather than letting them go stale.
-- CI runs on **GitLab CI** (`.gitlab-ci.yml`): setup → quality (lint/format/typecheck) → build → test → android. There is no GitHub Actions workflow.
+- CI runs on **GitLab CI** (`.gitlab-ci.yml`): setup → quality (lint/format/typecheck) → build → test → android. The only GitHub Actions workflow is `.github/workflows/pages.yml`, which publishes the landing and a simulator-only cockpit to GitHub Pages.
+- The landing and the cockpit can be served from a sub-path (`BASE_PATH`, used by the Pages build). Next prefixes its own links, but files under `public/` must go through `conBase()` (`apps/pwa/lib/base.ts`) or `BASE` (`apps/landing/app/page.tsx`); never hardcode a leading `/`. `STATIC_EXPORT=1` turns the cockpit build into a static export instead of the Docker standalone server.
 - `.claude/skills/` contains installed Agent Skills; `.claude/template/SKILL.md` is the template for new ones. Do not edit `.idea/`.
