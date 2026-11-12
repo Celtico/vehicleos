@@ -41,7 +41,10 @@ export const metadata: Metadata = {
       "Instrumentación, diagnóstico y telemetría para coches con puerto OBD-II. No te dice P0401: te dice qué rueda.",
     type: "website",
     locale: "es_ES",
+    url: "https://vehicleos.serverscel.com/",
+    images: [{ url: "https://vehicleos.serverscel.com/cover.png", width: 2400, height: 1254 }],
   },
+  twitter: { card: "summary_large_image", images: ["https://vehicleos.serverscel.com/cover.png"] },
 };
 
 export const viewport: Viewport = {

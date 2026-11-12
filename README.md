@@ -1,5 +1,7 @@
 # VehicleOS
 
+![VehicleOS: el cuadro digital que tu coche no traía de fábrica](apps/landing/public/cover.png)
+
 Sistema operativo para coches basado en una PWA. Funciona en pantallas Android de automóvil, tablets, móviles y navegadores web. Completamente modular.
 
 ## Arquitectura
